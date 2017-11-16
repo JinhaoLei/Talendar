@@ -156,6 +156,7 @@ class Add(QDialog):
         if repeatWindow.exec_():
             return
 
+
     def diffUnit(self, index):
         if self.comboReminder.currentIndex() == 0:
             pass
@@ -223,7 +224,7 @@ class Add(QDialog):
 
         self.leftLayout.addWidget(lblRepeat, 5, 0)
         self.leftLayout.addWidget(checkRepeat, 5, 1)
-        checkRepeat.stateChanged.connect(newWindow)
+        checkRepeat.stateChanged.connect(self.Repeat)
 
         self.leftLayout.addWidget(lblReminder, 6, 0)
         self.leftLayout.addWidget(self.comboReminder, 6, 1)
@@ -257,6 +258,8 @@ class Talendar(QWidget):
 
     def initDB(self):
         pass
+
+
 
     def initGrid(self):
 
