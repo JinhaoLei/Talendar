@@ -194,6 +194,30 @@ class Add(QDialog):               #新建事项窗口
         self.numOfClicked += 1
         self.tagGroup[self.numOfClicked - 1].show()
 
+    def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
+        addWindow = Add()
+        if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
+            name = addWindow.editTitle.text()
+            location = addWindow.editLoc.text()
+            startDate = addWindow.editStartDate.text()
+            startHour = addWindow.editStartHour.text()
+            startMinute = addWindow.editStartMinute.text()
+            endDate = addWindow.editEndDate.text()
+            endHour = addWindow.editEndHour.text()
+            endMinute = addWindow.editEndMinute.text()
+            note = addWindow.editNote.toPlainText()
+            ifCheckRepeat = addWindow.checkRepeat.isChecked()
+            reminder = addWindow.comboReminder.currentIndex()
+            reminderUnit = addWindow.comboReminderUnit.currentIndex()
+            reminderNumber = addWindow.editReminderTime.text()
+            tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
+            repeatInfo = addWindow.repeatParameters
+            sonID = -1  # 子事件没有子事件
+            self.sonID = 999  # 给父级事件赋子事件
+
+            print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
+            return
+
     def DeleteTag(self):
         self.tagGroup[self.numOfClicked - 1].hide()
         self.tagGroup[self.numOfClicked - 1].clear()
@@ -206,10 +230,19 @@ class Add(QDialog):               #新建事项窗口
         self.editTitle = QLineEdit()
 
         lblStart = QLabel(u'开始时间')
-        self.editStart = calendarLineEdit(590, 370)
+        self.editStartDate = calendarLineEdit(590, 370)
 
+        self.editStartHour = QLineEdit()
+        self.lblStartHour = QLabel(u'时')
+        self.editStartMinute = QLineEdit()
+        self.lblStartMinute = QLabel(u'分')
         lblEnd = QLabel(u'结束时间')
-        self.editEnd = calendarLineEdit(590, 390)
+        self.editEndDate = calendarLineEdit(590, 390)
+
+        self.editEndHour = QLineEdit()
+        self.lblEndHour = QLabel(u'时')
+        self.editEndMinute = QLineEdit()
+        self.lblEndMinute = QLabel(u'分')
 
         lblLoc = QLabel(u'地点')
         self.editLoc = QLineEdit()
@@ -257,16 +290,26 @@ class Add(QDialog):               #新建事项窗口
         self.comboReminder.currentIndexChanged.connect(self.diffUnit)
 
         self.buttonSon = QPushButton(u'创建子事件')
-        self.buttonSon.clicked.connect(newWindow)
+        self.buttonSon.clicked.connect(self.newSubWindow)
+        self.sonID = 999  #请改掉这一句
 
         self.leftLayout.addWidget(lblTitle, 0, 0)
         self.leftLayout.addWidget(self.editTitle, 0, 1)
 
         self.leftLayout.addWidget(lblStart, 1, 0)
-        self.leftLayout.addWidget(self.editStart, 1, 1)
+        self.leftLayout.addWidget(self.editStartDate, 1, 1)
+        self.leftLayout.addWidget(self.editStartHour, 1,2)
+        self.leftLayout.addWidget(self.lblStartHour, 1, 3)
+        self.leftLayout.addWidget(self.editStartMinute, 1, 4)
+        self.leftLayout.addWidget(self.lblStartMinute, 1, 5)
+
 
         self.leftLayout.addWidget(lblEnd, 2, 0)
-        self.leftLayout.addWidget(self.editEnd, 2, 1)
+        self.leftLayout.addWidget(self.editEndDate, 2, 1)
+        self.leftLayout.addWidget(self.editEndHour, 2, 2)
+        self.leftLayout.addWidget(self.lblEndHour, 2, 3)
+        self.leftLayout.addWidget(self.editEndMinute, 2, 4)
+        self.leftLayout.addWidget(self.lblEndMinute, 2, 5)
 
         self.leftLayout.addWidget(lblLoc, 3, 0)
         self.leftLayout.addWidget(self.editLoc, 3, 1)
@@ -297,13 +340,19 @@ class Add(QDialog):               #新建事项窗口
         self.mainLayout.setColumnStretch(1, 20)
         self.mainLayout.addLayout(self.leftLayout, 0, 0)'''
 
+
+
 def newWindow(self):     #新建事项窗口的接口
     addWindow = Add()
     if addWindow.exec_():   #用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
         name = addWindow.editTitle.text()
         location = addWindow.editLoc.text()
-        startDate = addWindow.editStart.text()
-        endDate = addWindow.editEnd.text()
+        startDate = addWindow.editStartDate.text()
+        startHour = addWindow.editStartHour.text()
+        startMinute = addWindow.editStartMinute.text()
+        endDate = addWindow.editEndDate.text()
+        endHour = addWindow.editEndHour.text()
+        endMinute = addWindow.editEndMinute.text()
         note = addWindow.editNote.toPlainText()
         ifCheckRepeat =  addWindow.checkRepeat.isChecked()
         reminder = addWindow.comboReminder.currentIndex()
@@ -311,7 +360,8 @@ def newWindow(self):     #新建事项窗口的接口
         reminderNumber = addWindow.editReminderTime.text()
         tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
         repeatInfo = addWindow.repeatParameters
-        print name, location, startDate, endDate, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo
+        sonID = addWindow.sonID
+        print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
         return
 
 class DDL(QWidget): #DDL列表界面
