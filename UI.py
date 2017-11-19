@@ -3,6 +3,10 @@
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from time import time,localtime,strftime
+from datetime import datetime
+from datetime import timedelta
+from calendar import monthrange
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -194,30 +198,6 @@ class Add(QDialog):               #新建事项窗口
         self.numOfClicked += 1
         self.tagGroup[self.numOfClicked - 1].show()
 
-    def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
-        addWindow = Add()
-        if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
-            name = addWindow.editTitle.text()
-            location = addWindow.editLoc.text()
-            startDate = addWindow.editStartDate.text()
-            startHour = addWindow.editStartHour.text()
-            startMinute = addWindow.editStartMinute.text()
-            endDate = addWindow.editEndDate.text()
-            endHour = addWindow.editEndHour.text()
-            endMinute = addWindow.editEndMinute.text()
-            note = addWindow.editNote.toPlainText()
-            ifCheckRepeat = addWindow.checkRepeat.isChecked()
-            reminder = addWindow.comboReminder.currentIndex()
-            reminderUnit = addWindow.comboReminderUnit.currentIndex()
-            reminderNumber = addWindow.editReminderTime.text()
-            tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
-            repeatInfo = addWindow.repeatParameters
-            sonID = -1  # 子事件没有子事件
-            self.sonID = 999  # 给父级事件赋子事件
-
-            print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
-            return
-
     def DeleteTag(self):
         self.tagGroup[self.numOfClicked - 1].hide()
         self.tagGroup[self.numOfClicked - 1].clear()
@@ -230,19 +210,10 @@ class Add(QDialog):               #新建事项窗口
         self.editTitle = QLineEdit()
 
         lblStart = QLabel(u'开始时间')
-        self.editStartDate = calendarLineEdit(590, 370)
+        self.editStart = calendarLineEdit(590, 370)
 
-        self.editStartHour = QLineEdit()
-        self.lblStartHour = QLabel(u'时')
-        self.editStartMinute = QLineEdit()
-        self.lblStartMinute = QLabel(u'分')
         lblEnd = QLabel(u'结束时间')
-        self.editEndDate = calendarLineEdit(590, 390)
-
-        self.editEndHour = QLineEdit()
-        self.lblEndHour = QLabel(u'时')
-        self.editEndMinute = QLineEdit()
-        self.lblEndMinute = QLabel(u'分')
+        self.editEnd = calendarLineEdit(590, 390)
 
         lblLoc = QLabel(u'地点')
         self.editLoc = QLineEdit()
@@ -290,26 +261,16 @@ class Add(QDialog):               #新建事项窗口
         self.comboReminder.currentIndexChanged.connect(self.diffUnit)
 
         self.buttonSon = QPushButton(u'创建子事件')
-        self.buttonSon.clicked.connect(self.newSubWindow)
-        self.sonID = 999  #请改掉这一句
+        self.buttonSon.clicked.connect(newWindow)
 
         self.leftLayout.addWidget(lblTitle, 0, 0)
         self.leftLayout.addWidget(self.editTitle, 0, 1)
 
         self.leftLayout.addWidget(lblStart, 1, 0)
-        self.leftLayout.addWidget(self.editStartDate, 1, 1)
-        self.leftLayout.addWidget(self.editStartHour, 1,2)
-        self.leftLayout.addWidget(self.lblStartHour, 1, 3)
-        self.leftLayout.addWidget(self.editStartMinute, 1, 4)
-        self.leftLayout.addWidget(self.lblStartMinute, 1, 5)
-
+        self.leftLayout.addWidget(self.editStart, 1, 1)
 
         self.leftLayout.addWidget(lblEnd, 2, 0)
-        self.leftLayout.addWidget(self.editEndDate, 2, 1)
-        self.leftLayout.addWidget(self.editEndHour, 2, 2)
-        self.leftLayout.addWidget(self.lblEndHour, 2, 3)
-        self.leftLayout.addWidget(self.editEndMinute, 2, 4)
-        self.leftLayout.addWidget(self.lblEndMinute, 2, 5)
+        self.leftLayout.addWidget(self.editEnd, 2, 1)
 
         self.leftLayout.addWidget(lblLoc, 3, 0)
         self.leftLayout.addWidget(self.editLoc, 3, 1)
@@ -340,19 +301,13 @@ class Add(QDialog):               #新建事项窗口
         self.mainLayout.setColumnStretch(1, 20)
         self.mainLayout.addLayout(self.leftLayout, 0, 0)'''
 
-
-
 def newWindow(self):     #新建事项窗口的接口
     addWindow = Add()
     if addWindow.exec_():   #用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
         name = addWindow.editTitle.text()
         location = addWindow.editLoc.text()
-        startDate = addWindow.editStartDate.text()
-        startHour = addWindow.editStartHour.text()
-        startMinute = addWindow.editStartMinute.text()
-        endDate = addWindow.editEndDate.text()
-        endHour = addWindow.editEndHour.text()
-        endMinute = addWindow.editEndMinute.text()
+        startDate = addWindow.editStart.text()
+        endDate = addWindow.editEnd.text()
         note = addWindow.editNote.toPlainText()
         ifCheckRepeat =  addWindow.checkRepeat.isChecked()
         reminder = addWindow.comboReminder.currentIndex()
@@ -360,8 +315,7 @@ def newWindow(self):     #新建事项窗口的接口
         reminderNumber = addWindow.editReminderTime.text()
         tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
         repeatInfo = addWindow.repeatParameters
-        sonID = addWindow.sonID
-        print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
+        print name, location, startDate, endDate, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo
         return
 
 class DDL(QWidget): #DDL列表界面
@@ -423,17 +377,15 @@ def newDDL(self):
 
 class Talendar(QWidget):#主界面
 
+
     def __init__(self):
         super(Talendar, self).__init__()
         self.setWindowTitle("Talendar")
-
+	self.date=datetime.now()
         self.initGrid()
-        self.resize(650, 500)
-        #self.center()
-        #self.current_row = 0
-        #self.setGeometry(300, 300, 1000, 400)
-        #elf.setWindowTitle('Talendar')
-        #self.setWindowIcon(QtGui.QIcon('icon.png'))
+
+	#self.date=datetime.now()
+        self.resize(680, 485)
 
     def initDB(self):
         pass
@@ -462,7 +414,7 @@ class Talendar(QWidget):#主界面
     def initLeftGrid(self):
         self.leftLayout = QVBoxLayout()
         #self.leftLayout.setMargin(10)
-
+	#self.leftLayout.addWidget(QLabel("test"))
         btnUpdate = QPushButton(u'同步')
         self.leftLayout.addWidget(btnUpdate)
         btnNew = QPushButton(u'新建')
@@ -473,9 +425,15 @@ class Talendar(QWidget):#主界面
         self.leftLayout.addWidget(btnDDL)
         btnSetting = QPushButton(u'设置')
         self.leftLayout.addWidget(btnSetting)
-
         self.leftLayout.addStretch(1)
         btnDDL.clicked.connect(newDDL)
+	#self.leftLayout.addWidget(QLabel('      '+self.date.strftime("%Y")))
+	upperPage=QPushButton(u'上一页')
+	self.leftLayout.addWidget(upperPage)
+	upperPage.clicked.connect(self.upPage)
+	nextPage=QPushButton(u'下一页')
+	self.leftLayout.addWidget(nextPage)
+	nextPage.clicked.connect(self.nextPage)
         #self.leftLayout.setRowStretch(0, 1)
         #self.leftLayout.setRowStretch(1, 1)
         #self.leftLayout.setColumnStretch(0, 1)
@@ -484,21 +442,67 @@ class Talendar(QWidget):#主界面
         for i in range(start, end):
             self.leftLayout.addWidget(QLabel(''),0, 0)
 
+
     def initCalendarGrid(self):
+	self.rowNum=7
+	rowNum=self.rowNum
         self.calendarLayout = QGridLayout()
+	self.year=QLabel(self.date.strftime("%Y"))
+	self.calendarLayout.addWidget(self.year,0,0)
+	#self.calendarLayout.removeWidget(self.year)
         self.grid = QTableWidget()
         self.grid.setColumnCount(7)
-        self.grid.setRowCount(0)
+        self.grid.setRowCount(rowNum)
+	#self.grid.setWindowTitle(QString(strftime("%Y")))
         column_width = [75 for i in range(7)]
         for column in range(7):
             self.grid.setColumnWidth(column, column_width[column])
+	for row in range(rowNum):
+	    self.grid.setRowHeight(row,55)
         headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.grid.setHorizontalHeaderLabels(headerlabels)
         self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+	self.tableDict={u'星期一':0, u'星期二':1, u'星期三':2, u'星期四':3, u'星期五':4, u'星期六':5, u'星期日':6}
+	#self.grid.setWindowTitle(QString(strftime("%Y")))
+	todayW=self.date.strftime("%A").decode('utf-8')#strftime(u"%A",localtime(time())).decode('utf-8')
 
+	today=QTableWidgetItem(self.date.strftime("%m-%d"))
+	todayRow=int(self.date.strftime("%W"))
+	today.setBackground(QBrush(QColor(Qt.yellow)))
+	today.setTextAlignment(Qt.AlignCenter);  
+	self.grid.setItem(todayRow%rowNum,self.tableDict[todayW],today)
+	rowlabels=[str(todayRow)]
+	year=int(self.date.strftime("%Y"))
+	maxW=int(datetime(year,12,31).strftime("%W"))
+
+	for i in range(todayRow%rowNum):
+	    rowlabels=[str(todayRow-i-1)]+rowlabels
+	for i in range(rowNum-todayRow%rowNum-1):
+	    if(todayRow+i+1<=maxW):
+	        rowlabels.append(str(todayRow+i+1))
+	    elif(rowlabels[-1]<7):
+		rowlabels.append(str(int(rowlabels[-1])+1))
+	self.grid.setVerticalHeaderLabels(rowlabels)
+	#self.grid.addWidget(QLabel("test"))
+	
+
+	for i in range(int(self.date.strftime("%W"))%rowNum*7+self.tableDict[self.date.strftime("%A").decode('utf-8')]):
+	    tempDay=QTableWidgetItem((self.date-timedelta(days=i+1)).strftime("%m-%d"))
+	    tempRow=int((self.date-timedelta(days=i+1)).strftime("%W"))%rowNum
+	    tempColumn=self.tableDict[(self.date-timedelta(days=i+1)).strftime("%A").decode('utf-8')]
+	    tempDay.setTextAlignment(Qt.AlignCenter)
+	    self.grid.setItem(tempRow,tempColumn,tempDay)
+
+	for i in range(self.rowNum*7-1-int(self.date.strftime("%W"))%rowNum*7-self.tableDict[self.date.strftime("%A").decode("utf-8")]):
+	    tempDay=QTableWidgetItem((self.date+timedelta(days=i+1)).strftime("%m-%d"))
+            tempRow=int((self.date+timedelta(days=i+1)).strftime("%W"))%rowNum
+            tempColumn=self.tableDict[(self.date+timedelta(days=i+1)).strftime("%A").decode('utf-8')]
+            tempDay.setTextAlignment(Qt.AlignCenter)
+            self.grid.setItem(tempRow,tempColumn,tempDay)
 
         self.calendarLayout.addWidget(self.grid)
+	
 
     def center(self):
         qr = self.frameGeometry()
@@ -515,13 +519,383 @@ class Talendar(QWidget):#主界面
         self.setWindowTitle('Emit signal')
         self.show()
 
+
+    def upPage(self):
+	oldGrid=self.grid
+	
+	rowNum=self.rowNum
+	#oldGrid.close()
+	verticalHead=[]
+	self.date=self.date-timedelta(days=self.rowNum*7)
+	self.year.setText(self.date.strftime("%Y"))
+	maxW=int(datetime(int((self.date-timedelta(days=self.rowNum*7)).strftime("%Y"))-1,12,31).strftime("%W"))
+	rowlabels=[str((int(oldGrid.takeVerticalHeaderItem(i).text())-self.rowNum)%maxW) for i  in range(rowNum)]
+
+	oldGrid.close()
+	
+        self.grid = QTableWidget()
+        self.grid.setColumnCount(7)
+        self.grid.setRowCount(rowNum)
+        column_width = [75 for i in range(7)]
+        for column in range(7):
+            self.grid.setColumnWidth(column, column_width[column])
+        for row in range(rowNum):
+            self.grid.setRowHeight(row,55)
+        headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
+        self.grid.setHorizontalHeaderLabels(headerlabels)
+        self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableDict={u'星期一':0, u'星期二':1, u'星期三':2, u'星期四':3, u'星期五':4, u'星期六':5, u'星期日':6}
+
+        self.grid.setVerticalHeaderLabels(rowlabels)
+	if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):
+            todayW=strftime(u"%A",localtime(time())).decode('utf-8')
+           
+            today=QTableWidgetItem(self.date.strftime("%m-%d").decode('utf-8'))
+            todayRow=int(strftime("%W"))%rowNum
+            today.setBackground(QBrush(QColor(Qt.yellow)))
+            today.setTextAlignment(Qt.AlignCenter);
+            self.grid.setItem(todayRow%rowNum,self.tableDict[todayW],today)
+
+	else:
+	    todayW=strftime("%A").decode('utf-8')
+
+            today=QTableWidgetItem(self.date.strftime("%m-%d").decode('utf-8'))
+            todayRow=int(strftime("%W"))%rowNum
+
+            today.setTextAlignment(Qt.AlignCenter);
+            self.grid.setItem(todayRow%rowNum,self.tableDict[todayW],today)
+	#print todayRow
+        for i in range(todayRow%rowNum*7+self.tableDict[todayW]):
+            tempDay=QTableWidgetItem((self.date-timedelta(days=i+1)).strftime("%m-%d"))
+            tempRow=(todayRow*7+self.tableDict[todayW]-(i+1))/7
+            tempColumn=(todayRow*7+self.tableDict[todayW]-(i+1))%7
+            tempDay.setTextAlignment(Qt.AlignCenter)
+            self.grid.setItem(tempRow,tempColumn,tempDay)
+
+        for i in range(self.rowNum*7-1-todayRow%rowNum*7-self.tableDict[todayW]):
+            tempDay=QTableWidgetItem((self.date+timedelta(days=i+1)).strftime("%m-%d"))
+            tempRow=(todayRow*7+self.tableDict[todayW]+(i+1))/7
+            tempColumn=(todayRow*7+self.tableDict[todayW]+(i+1))%7
+            tempDay.setTextAlignment(Qt.AlignCenter)
+            self.grid.setItem(tempRow,tempColumn,tempDay)
+
+
+        self.calendarLayout.addWidget(self.grid)
+
+    def nextPage(self):
+	oldGrid=self.grid
+	
+	rowNum=self.rowNum
+	#self.year.setText(self.date.strftime("%Y"))
+	maxW=int(datetime(int((self.date-timedelta(days=self.rowNum*7)).strftime("%Y")),12,31).strftime("%W"))
+	self.date=self.date+timedelta(days=self.rowNum*7)
+	self.year.setText(self.date.strftime("%Y"))
+
+	rowlabels=[str((int(oldGrid.takeVerticalHeaderItem(i).text())+self.rowNum)%maxW) for i  in range(rowNum)]
+
+	oldGrid.close()
+	
+        self.grid = QTableWidget()
+        self.grid.setColumnCount(7)
+        self.grid.setRowCount(rowNum)
+        column_width = [75 for i in range(7)]
+        for column in range(7):
+            self.grid.setColumnWidth(column, column_width[column])
+        for row in range(rowNum):
+            self.grid.setRowHeight(row,55)
+        headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
+        self.grid.setHorizontalHeaderLabels(headerlabels)
+        self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableDict={u'星期一':0, u'星期二':1, u'星期三':2, u'星期四':3, u'星期五':4, u'星期六':5, u'星期日':6}
+
+        self.grid.setVerticalHeaderLabels(rowlabels)
+	if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):
+            todayW=strftime(u"%A",localtime(time())).decode('utf-8')
+           
+            today=QTableWidgetItem(self.date.strftime("%m-%d").decode('utf-8'))
+            todayRow=int(strftime("%W"))%rowNum
+            today.setBackground(QBrush(QColor(Qt.yellow)))
+            today.setTextAlignment(Qt.AlignCenter);
+            self.grid.setItem(todayRow%rowNum,self.tableDict[todayW],today)
+
+	else:
+	    todayW=strftime("%A").decode('utf-8')
+
+            today=QTableWidgetItem(self.date.strftime("%m-%d").decode('utf-8'))
+            todayRow=int(strftime("%W"))%rowNum
+
+            today.setTextAlignment(Qt.AlignCenter);
+            self.grid.setItem(todayRow%rowNum,self.tableDict[todayW],today)
+	#print todayRow
+        for i in range(todayRow%rowNum*7+self.tableDict[todayW]):
+            tempDay=QTableWidgetItem((self.date-timedelta(days=i+1)).strftime("%m-%d"))
+            tempRow=(todayRow*7+self.tableDict[todayW]-(i+1))/7
+            tempColumn=(todayRow*7+self.tableDict[todayW]-(i+1))%7
+            tempDay.setTextAlignment(Qt.AlignCenter)
+            self.grid.setItem(tempRow,tempColumn,tempDay)
+
+        for i in range(self.rowNum*7-1-todayRow%rowNum*7-self.tableDict[todayW]):
+            tempDay=QTableWidgetItem((self.date+timedelta(days=i+1)).strftime("%m-%d"))
+            tempRow=(todayRow*7+self.tableDict[todayW]+(i+1))/7
+            tempColumn=(todayRow*7+self.tableDict[todayW]+(i+1))%7
+            tempDay.setTextAlignment(Qt.AlignCenter)
+            self.grid.setItem(tempRow,tempColumn,tempDay)
+
+
+        self.calendarLayout.addWidget(self.grid)
+
     def mousePressEvent(self, event):
         self.c.closeApp.emit()
 
+
+
+
+class monthPage(QWidget):##月视图
+
+
+    def __init__(self):
+        super(monthPage, self).__init__()
+        self.setWindowTitle("Talendar")
+	self.date=datetime.now()
+        self.initGrid()
+
+	#self.date=datetime.now()
+        self.resize(680, 485)
+
+    def initDB(self):
+        pass
+
+
+
+    def initGrid(self):
+
+
+        self.initLeftGrid()   #初始化左侧菜单栏
+        self.initCalendarGrid()   #初始化右侧日历表格界面
+        self.initMainGrid()    #构建主布局
+
+
+    def initMainGrid(self):
+        self.mainLayout = QGridLayout(self)
+        self.mainLayout.setMargin(15)
+        self.mainLayout.setSpacing(10)
+        self.mainLayout.setColumnStretch(1,20)
+        self.mainLayout.addLayout(self.leftLayout, 0, 0)
+        self.mainLayout.addLayout(self.calendarLayout, 0, 1)
+
+        #self.mainLayout.addLayout(bottomLayout, 1, 0, 1, 2)
+        #self.mainLayout.setSizeConstraint(QLayout.SetFixedSize)
+
+    def initLeftGrid(self):
+        self.leftLayout = QVBoxLayout()
+        #self.leftLayout.setMargin(10)
+	#self.leftLayout.addWidget(QLabel("test"))
+        btnUpdate = QPushButton(u'同步')
+        self.leftLayout.addWidget(btnUpdate)
+        btnNew = QPushButton(u'新建')
+        self.leftLayout.addWidget(btnNew)
+
+        btnNew.clicked.connect(newWindow)
+        btnDDL = QPushButton(u'DDL列表')
+        self.leftLayout.addWidget(btnDDL)
+        btnSetting = QPushButton(u'设置')
+        self.leftLayout.addWidget(btnSetting)
+        self.leftLayout.addStretch(1)
+        btnDDL.clicked.connect(newDDL)
+	#self.leftLayout.addWidget(QLabel('      '+self.date.strftime("%Y")))
+	upperPage=QPushButton(u'上一页')
+	self.leftLayout.addWidget(upperPage)
+	upperPage.clicked.connect(self.upPage)
+	nextPage=QPushButton(u'下一页')
+	self.leftLayout.addWidget(nextPage)
+	nextPage.clicked.connect(self.nextPage)
+        #self.leftLayout.setRowStretch(0, 1)
+        #self.leftLayout.setRowStretch(1, 1)
+        #self.leftLayout.setColumnStretch(0, 1)
+
+    def fillBlank(self, flag, start, end):     #column 1 row 0
+        for i in range(start, end):
+            self.leftLayout.addWidget(QLabel(''),0, 0)
+
+
+    def initCalendarGrid(self):
+	self.rowNum=1
+	self.colNum=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1]
+	rowNum=self.rowNum
+        self.calendarLayout = QGridLayout()
+	self.year=QLabel(self.date.strftime("%Y"))
+	self.calendarLayout.addWidget(self.year,0,0)
+	#self.calendarLayout.removeWidget(self.year)
+        self.grid = QTableWidget()
+        self.grid.setColumnCount(self.colNum)
+        self.grid.setRowCount(rowNum)
+	#self.grid.setWindowTitle(QString(strftime("%Y")))
+        column_width = [75 for i in range(self.colNum)]
+        for column in range(self.colNum):
+            self.grid.setColumnWidth(column, column_width[column])
+	for row in range(rowNum):
+	    self.grid.setRowHeight(row,420)
+        headerlabels = [str(i+1) for i in range(self.colNum)]
+        self.grid.setHorizontalHeaderLabels(headerlabels)
+        self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+	#self.grid.setWindowTitle(QString(strftime("%Y")))
+
+
+	today=QTableWidgetItem('')
+	todayCol=int(self.date.strftime("%d"))-1
+	today.setBackground(QBrush(QColor(Qt.yellow)))
+	today.setTextAlignment(Qt.AlignCenter);  
+	self.grid.setItem(0,todayCol,today)
+
+
+        rowlabels=[str(self.date.strftime("%Y\n   %m"))]
+	self.grid.setVerticalHeaderLabels(rowlabels)
+	#self.grid.addWidget(QLabel("test"))
+        self.calendarLayout.addWidget(self.grid)
+	
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def initUI(self):
+
+        #self.c = Communicate()
+        self.c.closeApp.connect(self.close)
+
+        #self.setGeometry(300, 300, 290, 150)
+        self.setWindowTitle('Emit signal')
+        self.show()
+
+
+    def upPage(self):
+	oldGrid=self.grid
+	
+	rowNum=self.rowNum
+	#oldGrid.close()
+	verticalHead=[]
+	year=int(self.date.strftime("%Y"))
+	mon=int(self.date.strftime("%m"))
+
+	if(mon==1):
+	    mon=12
+	    year-=1
+	else:
+	    mon-=1
+	self.date=self.date-timedelta(days=monthrange(year,mon)[1])
+	self.year.setText(self.date.strftime("%Y"))
+	rowlabels=[str(self.date.strftime("%Y\n   %m"))]
+	self.colNum=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1]
+	oldGrid.close()
+	
+        self.grid = QTableWidget()
+        self.grid.setColumnCount(self.colNum)
+        self.grid.setRowCount(rowNum)
+        column_width = [75 for i in range(self.colNum)]
+        for column in range(self.colNum):
+            self.grid.setColumnWidth(column, column_width[column])
+        for row in range(rowNum):
+            self.grid.setRowHeight(row,420)
+        headerlabels =[str(i+1) for i in range(int(self.date.strftime("%m")))] 
+        self.grid.setHorizontalHeaderLabels(headerlabels)
+        self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+
+        self.grid.setVerticalHeaderLabels(rowlabels)
+	print self.date.strftime("%d")
+	if self.date.strftime("%Y%m")==strftime("%Y%m"):
+            today=QTableWidgetItem('')
+            col=int(self.date.strftime("%d"))-1
+
+            today.setBackground(QBrush(QColor(Qt.yellow)))
+           
+            self.grid.setItem(0,col,today)
+
+        self.calendarLayout.addWidget(self.grid)
+
+    def nextPage(self):
+	oldGrid=self.grid
+	
+	rowNum=self.rowNum
+	#oldGrid.close()
+	verticalHead=[]
+	self.date=self.date+timedelta(days=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1])
+	self.year.setText(self.date.strftime("%Y"))
+	rowlabels=[str(self.date.strftime("%Y\n   %m"))]
+	self.colNum=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1]
+	oldGrid.close()
+	
+        self.grid = QTableWidget()
+        self.grid.setColumnCount(self.colNum)
+        self.grid.setRowCount(rowNum)
+        column_width = [75 for i in range(self.colNum)]
+        for column in range(self.colNum):
+            self.grid.setColumnWidth(column, column_width[column])
+        for row in range(rowNum):
+            self.grid.setRowHeight(row,420)
+        headerlabels =[str(i+1) for i in range(int(self.date.strftime("%m")))] 
+        self.grid.setHorizontalHeaderLabels(headerlabels)
+        self.grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.grid.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+
+        self.grid.setVerticalHeaderLabels(rowlabels)
+	if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):
+            today=QTableWidgetItem('')
+            today.setBackground(QBrush(QColor(Qt.yellow)))
+            today.setTextAlignment(Qt.AlignCenter);
+            self.grid.setItem(0,int(self.date.strftime("%d"))-1,today)
+
+        self.calendarLayout.addWidget(self.grid)
+
+    def mousePressEvent(self, event):
+        self.c.closeApp.emit()
+
+class MainPage(QWidget):
+    talendar_signal=pyqtSignal()
+    month_signal=pyqtSignal()
+    def __init__(self):
+	super(MainPage,self).__init__()
+	self.form=Talendar()
+	self.pushButton=QPushButton(self.form)
+	self.pushButton.setGeometry(QRect(15,300,90,40))
+	self.pushButton.setObjectName(u'toMonth')
+	self.pushButton.setText(u"切换月视图")
+	self.pushButton.clicked.connect(self.toMonth)
+	self.form.show()
+
+
+    def toMonth(self): #转换月视图
+	self.pform=self.form
+        self.form.close()
+        self.form=monthPage()
+        
+       
+        self.pushButton=QPushButton(self.form)
+        self.pushButton.setGeometry(QRect(15,300,90,40))
+        self.pushButton.setObjectName(u'toMonth')
+        self.pushButton.setText(u"切换周视图")
+        self.pushButton.clicked.connect(self.toWeek)
+        self.form.show()
+
+    def toWeek(self):
+	self.form.close()
+	self.form=self.pform
+	self.form.show()
+
+
 def main():
     app = QApplication(sys.argv)
-    talendar = Talendar()
-    talendar.show()
+    mainPage=MainPage()
+    #talendar = Talendar()
+    #talendar.show()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
