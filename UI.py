@@ -467,8 +467,8 @@ class Talendar(QWidget):  # 主界面
         self.rowNum=24 
 
         self.resize(695, 500)
-        #self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
-        self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
+        self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
+        #self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag='w'
         self.initGrid()
        
@@ -508,12 +508,17 @@ class Talendar(QWidget):  # 主界面
         self.mainLayout.setRowStretch(0,10)
         self.mainLayout.setRowStretch(1,1)
         self.mainLayout.setRowMinimumHeight(1,0)
-
+        
 
 
         self.mainLayout.addLayout(self.leftLayout, 0, 0)
-        self.mainLayout.addLayout(self.calendarLayout, 0, 1 )
-        self.mainLayout.addLayout(self.topLayout,2,1)
+        self.tempLayout=QVBoxLayout()
+        self.tempLayout.addLayout(self.topLayout)
+        self.tempLayout.addLayout(self.calendarLayout)
+        #self.mainLayout.addLayout(self.calendarLayout, 1, 1 )
+        #self.mainLayout.addLayout(self.topLayout,0,1)
+        #self.topLayout.setMaximumWidth(20)
+        self.mainLayout.addLayout(self.tempLayout,0,1)
 
 
 
