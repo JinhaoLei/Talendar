@@ -567,6 +567,7 @@ class Talendar(QWidget):  # 主界面
         self.initCalendarGrid()  # 初始化右侧日历表格界面
         self.initTopGrid()
         self.initMainGrid()  # 构建主布局
+        #self.addNewEvent(3,2,1,u'test')
 	
 
     def initTopGrid(self):#updated
@@ -682,40 +683,119 @@ class Talendar(QWidget):  # 主界面
     def WeekGrid(self):
         rowNum = self.rowNum       
         grid = QTableWidget()
+        grid.setSelectionMode(QAbstractItemView.SingleSelection)
         grid.setColumnCount(7)
         grid.setRowCount(self.rowNum)
         column_width = [75 for i in range(7)]
+        year=self.date.strftime("%Y")
+        month=self.date.strftime("%m")
+        todayCol=self.tableDict[self.date.strftime("%a").decode('utf-8')]
         for column in range(7):
             grid.setColumnWidth(column, column_width[column])
         for row in range(rowNum):
-            grid.setRowHeight(row, 55)
-
+            grid.setRowHeight(row, 65)
 
         grid.setHorizontalHeaderLabels(self.headerlabels)
         grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        grid.setSelectionBehavior(QAbstractItemView.SelectRows)
-
-
-
         rowlabels = []
 
         for i in range(self.rowNum):
-
-            rowlabels.append(str(i+1))
-
+            rowlabels.append(str(i+1)+':00')
 
         grid.setVerticalHeaderLabels(rowlabels)
+        ##############################################
+        beginDate=self.date-timedelta(todayCol)
+        flag_=0
         if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):
-            for i in range(self.rowNum):
-                today=QTableWidgetItem('')
-                todayCol=self.tableDict[self.date.strftime("%a").decode('utf-8')]
-       
-                today.setBackground(QBrush(QColor(Qt.yellow)))
-                grid.setItem(i,todayCol,today)
+            flag_=1
+        for col in range(7):
+            if not col==todayCol:
+                flag=0
+            elif flag_==1:
+                flag=1
+            for row in range(rowNum):
+                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1))
+                comBox=QListWidget()
+                newItem=QListWidgetItem('')
+                newItem.setFont(QFont("Courier",7))
+                #newItem.setStatusTip(str(scheduleid[i]))
+                comBox.addItem(newItem)
+                otherschedule=[]
+                for i,title in enumerate(scheduletitle):
+                    if i<2:
+                        if len(title)>6:
+                            title=title[:5]+u'...'
+                        newItem=QListWidgetItem(title)
+                        newItem.setFont(QFont("Courier",7))
+                        newItem.setStatusTip(str(scheduleid[i]))
+                        if flag==1:
+                            newItem.setBackground(QBrush(QColor(Qt.yellow)))
+                        comBox.addItem(newItem)
+                    else:
+                        otherschedule.append(scheduleid[i])
+
+                if len(otherschedule)>0:
+                    newItem=QListWidgetItem(u"还有%d项..."%len(otherschedule))
+                    newItem.setFont(QFont("Courier",7))
+                    status=''
+                    for item in otherschedule:
+                        status=status+str(item)+'-'
+                    newItem.setStatusTip(status)
+                    if flag==1:
+                        newItem.setBackground(QBrush(QColor(Qt.yellow)))
+                    comBox.addItem(newItem)
+                comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
+                grid.setCellWidget(row,col,comBox)
+            beginDate=beginDate+timedelta(1)
+
         return grid
+
+
+    def getHourScheduleTitle(self,time):#事件获取接口，传入"Y-M-D-H"
+        print time
+        return [[56,12],[u"软件考试",u"电镜考试"]]#,u"很多很多很多很多很多考试"]]
+    def getDayScheduleTitle(self,time):#事件获取接口，传入"Y-M-D"
+        print time
+        return [[6],[u"测试模型测试模型"]]#,u"吃饭",u"吃饭",u"还是吃饭",u"写作业"]]
+
+    def mouseDoubleClicked(self,eve):
+        self.mouseClicked(eve.statusTip())
+
+    def mouseClicked(self,ID):#鼠标响应接口，需要对ID类型进行判断，如果为空，则直接返回，不为空，分为单个时间和多个事件，多个事件一定以‘-’结尾
+        print ID
+
+    def addNewEvent(self,row,col,ID,title):#仅更改显示，数据未存
+        comBox=self.grid.cellWidget(row,col)
+        if comBox is None:
+            comBox=QListWidget()
+            self.grid.setCellWidget(row,col,comBox)
+        if comBox.count()>0:
+            item_C=comBox.item(comBox.count()-1)
+            if item_C.statusTip()[-1]=='-':
+                string_c=item_C.statusTip()
+                num=string_c.count('-')
+                string_c=string_c+str(ID)+'-'
+                item_C.setStatusTip(string_c)
+                item_C.setText(u"还有%d项..."%(num+1))
+                return
+            elif comBox.count()>2:
+                item_C=QListWidgetItem(u"还有1项...")
+                item_C.setFont(QFont("Courier",7))
+                item_C.setStatusTip(str(ID)+'-')
+                comBox.addItem(item_C)
+                return 
+        if len(title)>6:
+            title=title[:5]+u'...'
+        newItem=QListWidgetItem(title)
+        newItem.setFont(QFont("Courier",7))
+        newItem.setStatusTip(str(ID))
+        comBox.addItem(newItem)
+        comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
 
     def MonthGrid(self):
         beginDay=datetime(int(self.date.strftime("%Y")),int(self.date.strftime("%m")),1)
+        year=int(self.date.strftime("%Y"))
+        month=int(self.date.strftime("%m"))
         beginRow=0
         beginCol=self.tableDict[beginDay.strftime("%a").decode('utf-8')]
         monthTime=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1]
@@ -733,19 +813,46 @@ class Talendar(QWidget):  # 主界面
 
         grid.setHorizontalHeaderLabels(self.headerlabels)
         grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        grid.setSelectionBehavior(QAbstractItemView.SelectRows)
-        today=QTableWidgetItem(self.date.strftime("%m-%d"))
-        if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):   
-            today.setBackground(QBrush(QColor(Qt.yellow)))
-        today.setTextAlignment(Qt.AlignCenter)
-        grid.setItem(todayRow,todayCol,today)
-        for day in range(monthTime):
-            if not day==int(self.date.strftime("%d"))-1:
-                tempDay=QTableWidgetItem(beginDay.strftime("%m-%d"))
-                tempCol=beginCol
-                tempRow=beginRow
-                tempDay.setTextAlignment(Qt.AlignCenter)
-                grid.setItem(tempRow,tempCol,tempDay)
+
+        for day in range(monthTime):            
+            text=beginDay.strftime("%m-%d")
+            scheduleid,scheduletitle=self.getDayScheduleTitle(str(year)+'-'+str(month)+'-'+str(day+1))
+                
+            comBox = QListWidget() 
+            newItem=QListWidgetItem(text)
+
+            if self.date.strftime("%Y-%m-%d")==strftime("%Y-%m-%d") and day==int(self.date.strftime("%d") )-1:
+                newItem.setBackground(QBrush(QColor(Qt.yellow)))
+            comBox.addItem(newItem)
+            otherschedule=[]
+
+            for i,title in enumerate(scheduletitle):
+                if i <2:
+                    if len(title)>6:
+                        title=title[:5]+'...'
+                    newItem= QListWidgetItem(title)
+                    newItem.setFont(QFont("Courier",7))
+                    newItem.setStatusTip(str(scheduleid[i]))
+                    comBox.addItem(newItem)
+                else:
+                    otherschedule.append(scheduleid[i])
+            if len(otherschedule)>0:
+                newItem=QListWidgetItem(u"还有%d项..."%len(otherschedule))
+                newItem.setFont(QFont("Courier",7))
+                status=''
+                for item in otherschedule:
+                    status=status+str(item)+'-'
+                newItem.setStatusTip(status)
+                comBox.addItem(newItem)
+            comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
+            #grid.setCellWidget(0,3,comBox)
+            #tempDay=QTableWidgetItem(text)
+            tempCol=beginCol
+            tempRow=beginRow
+            #tempDay.setTextAlignment(Qt.AlignCenter)
+            
+            grid.setCellWidget(tempRow,tempCol,comBox)
+
             beginCol+=1
             beginRow=beginRow+beginCol/7
             beginCol=beginCol%7
