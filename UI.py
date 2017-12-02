@@ -22,40 +22,53 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.rejectFlag = 0
         self.show()
 
-    def reject(self):
-        self.rejectFlag = 1
-        self.hide()
-        self.close()
-        self.setResult(1)
-
     def diffUnit(self, index):
-        weekday = [u'一', u'二', u'三', u'四', u'五', u'六', u'日']
+
 
         if self.comboUnit.currentIndex() == 1:
-            self.leftLayout.addWidget(self.lblWeekRepeat, 5, 0)
             for i in range(7):
-                self.leftLayout.addWidget(QLabel(weekday[i]), 5, 2 * i + 1)
-                self.leftLayout.addWidget(self.checkBoxGroup[i], 5, 2 * i + 1 + 1)
+                self.checkBoxGroup[i].show()
+                self.lblGroup[i].show()
+                self.lblWeekRepeat.show()
         else:
-            self.leftLayout.removeWidget(self.Mon)
-            self.leftLayout.removeWidget(self.Tue)
-            self.leftLayout.removeWidget(self.Wedn)
-            self.leftLayout.removeWidget(self.Thu)
-            self.leftLayout.removeWidget(self.Fri)
-            self.leftLayout.removeWidget(self.Sat)
-            self.leftLayout.removeWidget(self.Sun)
+            for i in range(7):
+                self.checkBoxGroup[i].hide()
+                self.lblGroup[i].hide()
+                self.lblWeekRepeat.hide()
+                self.checkBoxGroup[i].setChecked(False)
 
     def setTimesEnable(self):
         self.editTimes.setEnabled(True)
+        self.editEnd.setEnabled(False)
+        self.editEnd.clear()
 
     def setEndEnable(self):
         self.editEnd.setEnabled(True)
+        self.editTimes.setEnabled(False)
+        self.editTimes.clear()
+
+    def setNeverEnable(self):
+        #self.editNever.setEnabled(True)
+        self.editTimes.setEnabled(False)
+        self.editEnd.setEnabled(False)
+        self.editTimes.clear()
+        self.editEnd.clear()
 
     def initLayout(self):
-        self.leftLayout = QGridLayout(self)
+        self.topLayout = QGridLayout()
+        self.bottomLayout = QGridLayout()
+        self.middleLayout = QGridLayout()
+
 
         lblUnit = QLabel(u'频率单位')
+        lblUnit.setMaximumWidth(50)
         self.comboUnit = QComboBox()
+        self.comboUnit.setMaximumWidth(50)
+        lblFre = QLabel(u'频率')
+        lblFre.setMaximumWidth(50)
+        self.editFre = QLineEdit()
+        self.editFre.setMaximumWidth(50)
+
 
         self.comboUnit.addItem(u"天")
         self.comboUnit.addItem(u"周")
@@ -63,6 +76,7 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.comboUnit.addItem(u"年")
 
         self.lblWeekRepeat = QLabel(u'重复时间')
+        #self.lblWeekRepeat.setMaximumWidth(50)
 
         self.Mon = QCheckBox()
         self.Tue = QCheckBox()
@@ -71,68 +85,112 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.Fri = QCheckBox()
         self.Sat = QCheckBox()
         self.Sun = QCheckBox()
+
+        self.lblMon = QLabel(u'一')
+        self.lblTue = QLabel(u'二')
+        self.lblWedn = QLabel(u'三')
+        self.lblThu = QLabel(u'四')
+        self.lblFri = QLabel(u'五')
+        self.lblSat = QLabel(u'六')
+        self.lblSun = QLabel(u'日')
         self.checkBoxGroup = [self.Mon, self.Tue, self.Wedn, self.Thu, self.Fri, self.Sat, self.Sun]
+        self.lblGroup = [self.lblMon, self.lblTue, self.lblWedn, self.lblThu, self.lblFri, self.lblSat, self.lblSun]
         self.comboUnit.currentIndexChanged.connect(self.diffUnit)
 
-        lblFre = QLabel(u'频率')
-        self.editFre = QLineEdit()
-        self.editFre.setFixedWidth(50)
+
 
         lblEnd = QLabel(u'结束时间')
-
         lblNever = QLabel(u'永不')
         self.radioNever = QRadioButton()
-
+        self.radioNever.setMaximumWidth(20)
         self.radioTimes = QRadioButton()
         lblRepeat = QLabel(u'重复')
-
         lblTimes = QLabel(u'次后')
+        lblTimes.setMaximumWidth(50)
         self.editTimes = QLineEdit()
-        self.editTimes.setFixedWidth(50)
+        self.editTimes.setMaximumWidth(30)
         self.editTimes.setEnabled(False)
         self.radioTimes.clicked.connect(self.setTimesEnable)
-
+        self.radioNever.clicked.connect(self.setNeverEnable)
         self.radioEnd = QRadioButton()
         lblEndDate = QLabel(u'结束日期')
-        self.editEnd = calendarLineEdit(590, 370)
+        self.editEnd = calendarLineEdit(660, 410)
         self.editEnd.setEnabled(False)
-        # self.editEnd.setFixedWidth(50)
+        #self.editEnd.setMaximumWidth(170)
+        self.editEnd.setFixedWidth(110)
         self.radioEnd.clicked.connect(self.setEndEnable)
 
-        self.leftLayout.addWidget(lblUnit, 0, 0)
-        self.leftLayout.addWidget(self.comboUnit, 0, 1)
 
-        self.leftLayout.addWidget(lblFre, 1, 0)
-        self.leftLayout.addWidget(self.editFre, 1, 1)
 
-        self.leftLayout.addWidget(lblEnd, 2, 0)
-        # self.leftLayout.addWidget(editEnd, 2, 1)
+        self.topLayout.addWidget(lblUnit, 0, 0)
+        self.topLayout.addWidget(self.comboUnit, 0, 1)
+        self.topLayout.addWidget(lblFre, 1, 0)
+        self.topLayout.addWidget(self.editFre, 1, 1)
+        self.topHLayout = QHBoxLayout()
+        self.topHLayout.addLayout(self.topLayout)
+        self.topHLayout.addStretch()
+        #topSpace = QSpacerItem(200, 1)
+        #self.topLayout.addItem(topSpace, 0, 2)
+        #self.topLayout.setColumnStretch(0, 5)
+        #self.topLayout.setColumnStretch(1, 1)
+        #self.topLayout.setColumnStretch(2, 5)
+        #self.topLayout.setColumnStretch(0, 1)
+        #self.topLayout.setColumnStretch(1, 3)
 
-        self.leftLayout.addWidget(lblNever, 2, 2)
-        self.leftLayout.addWidget(self.radioNever, 2, 1)
+        self.middleLayout.addWidget(lblEnd, 0, 0)
+        self.middleLayout.addWidget(self.radioNever, 0, 1)
+        self.middleLayout.addWidget(lblNever, 0, 2)
+        self.middleLayout.addWidget(self.radioTimes, 1, 1)
+        self.middleLayout.addWidget(lblRepeat, 1, 2)
+        self.middleLayout.addWidget(self.editTimes, 1, 3)
+        self.middleLayout.addWidget(lblTimes, 1, 4)
+        self.middleLayout.addWidget(self.radioEnd, 2, 1)
+        self.middleLayout.addWidget(lblEndDate, 2, 2)
+        self.middleLayout.addWidget(self.editEnd, 2, 3, 1, 2)
+        self.editEnd.setMaximumWidth(50)
+        self.middleHLayout = QHBoxLayout()
+        self.middleHLayout.addLayout(self.middleLayout)
+        self.middleHLayout.addStretch()
 
-        self.leftLayout.addWidget(self.radioTimes, 3, 1)
-        self.leftLayout.addWidget(lblRepeat, 3, 2)
-        self.leftLayout.addWidget(self.editTimes, 3, 3)
-        self.leftLayout.addWidget(lblTimes, 3, 4)
 
-        self.leftLayout.addWidget(self.radioEnd, 4, 1)
-        self.leftLayout.addWidget(lblEndDate, 4, 2)
-        self.leftLayout.addWidget(self.editEnd, 4, 3)
+        self.bottomLayout.addWidget(self.lblWeekRepeat, 0, 0)
+        self.lblWeekRepeat.hide()
+        # weekday = [u'一', u'二', u'三', u'四', u'五', u'六', u'日']
+        for i in range(7):
+            self.bottomLayout.addWidget(self.lblGroup[i], 0, 2 * i + 1)
+            self.bottomLayout.addWidget(self.checkBoxGroup[i], 0, 2 * i + 1 + 1)
+            self.checkBoxGroup[i].hide()
+            self.lblGroup[i].hide()
+        self.bottomHLayout = QHBoxLayout()
+        self.bottomHLayout.addLayout(self.bottomLayout)
+        self.bottomHLayout.addStretch()
 
         buttonsOkCancel = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
             Qt.Horizontal, self)
         buttonsOkCancel.accepted.connect(self.accept)
         buttonsOkCancel.rejected.connect(self.reject)
-        self.leftLayout.addWidget(buttonsOkCancel, 6, 1)
-        self.leftLayout.addWidget(buttonsOkCancel, 6, 2)
+
+        self.bottomCancelLayout = QHBoxLayout()
+        self.bottomCancelLayout.addStretch()
+        self.bottomCancelLayout.addWidget(buttonsOkCancel)
+
+        #self.bottomLayout.addWidget(buttonsOkCancel, 1, 2)
+
+        self.mainLayout = QGridLayout(self)
+
+        self.mainLayout.addLayout(self.topHLayout, 0, 0)
+        #self.mainLayout.addLayout(self.spaceLayout, 1, 0)
+        self.mainLayout.addLayout(self.middleHLayout, 1, 0)
+        self.mainLayout.addLayout(self.bottomHLayout, 2, 0)
+        self.mainLayout.addLayout(self.bottomCancelLayout, 3, 0)
 
 
 class CalendarWindow(QDialog):  # 日历选择控件
     def __init__(self, x, y, printDate):
         super(CalendarWindow, self).__init__()
         self.printDate = printDate
+        self.setModal(True)
         self.layout = QGridLayout(self)
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.showCalendar()
@@ -182,31 +240,34 @@ class Add(QDialog):  # 新建事项窗口
         self.show()
 
     def Repeat(self):  # 新建重复窗口
-        if self.checkRepeat.isChecked():
-            repeatWindow = RepeatWindow()
-            if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
-                if repeatWindow.rejectFlag == 1:
-                    self.checkRepeat.setChecked(False)
-                else:
-                    comboUnit = repeatWindow.comboUnit.currentIndex()
-                    frequency = repeatWindow.editFre.text()
-                    radioSelected = [repeatWindow.radioNever.isChecked(), repeatWindow.radioTimes.isChecked(),
+
+        repeatWindow = RepeatWindow()
+        self.repeatParameters = []
+        if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
+
+            comboUnit = repeatWindow.comboUnit.currentIndex()
+            frequency = repeatWindow.editFre.text()
+            radioSelected = [repeatWindow.radioNever.isChecked(), repeatWindow.radioTimes.isChecked(),
                                      repeatWindow.radioEnd.isChecked()]
-                    endTimes = repeatWindow.editTimes.text()
-                    endDate = repeatWindow.editEnd.text()
-                    checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
-                    self.repeatParameters = [comboUnit, frequency, radioSelected, endTimes, endDate,
+            endTimes = repeatWindow.editTimes.text()
+            endDate = repeatWindow.editEnd.text()
+            checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
+            self.repeatParameters = [comboUnit, frequency, radioSelected, endTimes, endDate,
                                              checkBoxGroup]  # 所有重复窗口里面设置的参数
-        else:
-            self.repeatParameters = []
+            print checkBoxGroup
+
 
     def diffUnit(self, index):
         if self.comboReminder.currentIndex() == 0:
             self.editReminderTime.setText("-1")
             self.comboReminderUnit.setCurrentIndex(-1)
+            self.editReminderTime.clear()
+            self.editReminderTime.hide()
+            self.comboReminderUnit.hide()
         else:
-            self.topLayout.addWidget(self.editReminderTime, 6, 2)
-            self.topLayout.addWidget(self.comboReminderUnit, 6, 3)
+            self.editReminderTime.show()
+            self.comboReminderUnit.show()
+            self.comboReminderUnit.setCurrentIndex(0)
 
     def AddTag(self):
         self.numOfClicked += 1
@@ -214,6 +275,8 @@ class Add(QDialog):  # 新建事项窗口
 
     def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
         addWindow = Add()
+        #addWindow.buttonSon.hide()
+        addWindow.buttonSon.setEnabled(False)
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
             name = addWindow.editTitle.text()
             location = addWindow.editLoc.text()
@@ -224,16 +287,19 @@ class Add(QDialog):  # 新建事项窗口
             endHour = addWindow.editEndHour.text()
             endMinute = addWindow.editEndMinute.text()
             note = addWindow.editNote.toPlainText()
-            ifCheckRepeat = addWindow.checkRepeat.isChecked()
+            #ifCheckRepeat = addWindow.checkRepeat.isChecked()
             reminder = addWindow.comboReminder.currentIndex()
             reminderUnit = addWindow.comboReminderUnit.currentIndex()
             reminderNumber = addWindow.editReminderTime.text()
             tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
             repeatInfo = addWindow.repeatParameters
-            sonID = -1  # 子事件没有子事件
-            self.sonID = 999  # 给父级事件赋子事件
-
-            print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
+            #sonID = self.sonID  # 子事件没有子事件
+            #self.sonID += 1
+            #self.sonIDList.append(self.sonID)  # 给父级事件赋子事件
+            sonIDList = []
+            self.sonIDList.append(self.sonID)
+            self.sonID += 1
+            print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonIDList
             # print repeatInfo
             return
 
@@ -246,12 +312,12 @@ class Add(QDialog):  # 新建事项窗口
         self.topLayout = QGridLayout()
         self.bottomLayout = QGridLayout()
         lblTitle = QLabel(u'标题')
-        lblTitle.setMaximumWidth(90)
+        lblTitle.setMaximumWidth(100)
         self.editTitle = QLineEdit()
 
         lblStart = QLabel(u'开始时间')
         # lblStart.setMaximumWidth(50)
-        self.editStartDate = calendarLineEdit(590, 370)
+        self.editStartDate = calendarLineEdit(510, 170)
         self.editStartDate.setMaximumWidth(110)
         self.editStartHour = QLineEdit()
         self.editStartHour.setMaximumWidth(30)
@@ -261,7 +327,7 @@ class Add(QDialog):  # 新建事项窗口
         self.lblStartMinute = QLabel(u'分')
         lblEnd = QLabel(u'结束时间')
 
-        self.editEndDate = calendarLineEdit(590, 390)
+        self.editEndDate = calendarLineEdit(510, 200)
         self.editEndDate.setMaximumWidth(110)
         self.editEndHour = QLineEdit()
         self.lblEndHour = QLabel(u'时')
@@ -280,25 +346,36 @@ class Add(QDialog):  # 新建事项窗口
         self.editNote = QTextEdit()
 
         lblRepeat = QLabel(u'重复')
-        self.checkRepeat = QCheckBox()
+        self.buttonRepeat = QPushButton(u'...')
+        self.buttonRepeat.setMaximumWidth(30)
 
         lblReminder = QLabel(u'提醒')
         self.comboReminder = QComboBox()
+        lblReminder.setMaximumWidth(70)
+        self.comboReminder.setMaximumWidth(70)
 
         self.comboReminder.addItem(u"无")
         self.comboReminder.addItem(u"提醒")
         self.comboReminder.addItem(u"电子邮件")
         self.editReminderTime = QLineEdit()
+        self.editReminderTime.setMaximumWidth(30)
         self.comboReminderUnit = QComboBox()
+        #self.comboReminderUnit.setMaximumWidth(30)
 
         self.comboReminderUnit.addItem(u"分钟")
         self.comboReminderUnit.addItem(u"小时")
         self.comboReminderUnit.addItem(u"天")
+        self.topLayout.addWidget(self.editReminderTime, 6, 2)
+        self.topLayout.addWidget(self.comboReminderUnit, 6, 3, 1, 2)
+        self.editReminderTime.hide()
+        self.comboReminderUnit.hide()
         self.comboReminder.currentIndexChanged.connect(self.diffUnit)
 
         self.buttonSon = QPushButton(u'创建子事件')
         self.buttonSon.clicked.connect(self.newSubWindow)
-        self.sonID = 999  # 请改掉这一句
+        self.buttonSon.setMaximumWidth(70)
+        self.sonIDList = []  # 请改掉这一句
+        self.sonID = 0
 
         self.topLayout.addWidget(lblTitle, 0, 0)
         self.topLayout.addWidget(self.editTitle, 0, 1, 1, 5)
@@ -319,14 +396,14 @@ class Add(QDialog):  # 新建事项窗口
         self.topLayout.addWidget(lblNote, 4, 0)
         self.topLayout.addWidget(self.editNote, 4, 1, 1, 5)
         self.topLayout.addWidget(lblRepeat, 5, 0)
-        self.topLayout.addWidget(self.checkRepeat, 5, 1)
+        self.topLayout.addWidget(self.buttonRepeat, 5, 1)
         self.repeatParameters = []
-        self.checkRepeat.stateChanged.connect(self.Repeat)
+        self.buttonRepeat.clicked.connect(self.Repeat)
         self.topLayout.addWidget(lblReminder, 6, 0)
         self.topLayout.addWidget(self.comboReminder, 6, 1)
 
         lblTag = QLabel(u'标签')
-        # lblTag.setMaximumWidth(150)
+        #lblTag.setMaximumWidth(1000)
         buttonAddTag = QPushButton(u'添加')
         # buttonAddTag.setMaximumWidth(150)
         self.numOfClicked = 0
@@ -340,7 +417,7 @@ class Add(QDialog):  # 新建事项窗口
         buttonAddTag.clicked.connect(self.AddTag)
         for i in range(5):
             self.tagGroup[i].setEnabled(False)
-            self.tagGroup[i].setMaximumWidth(70)
+            self.tagGroup[i].setMaximumWidth(90)
             self.bottomLayout.addWidget(self.tagGroup[i], 0, i + 1)
         buttonDeleteTag = QPushButton(u'删除')
         # buttonDeleteTag.setMaximumWidth(91)
@@ -392,15 +469,15 @@ def newWindow(self):  # 新建事项窗口的接口
         endHour = addWindow.editEndHour.text()
         endMinute = addWindow.editEndMinute.text()
         note = addWindow.editNote.toPlainText()
-        ifCheckRepeat = addWindow.checkRepeat.isChecked()
         reminder = addWindow.comboReminder.currentIndex()
         reminderUnit = addWindow.comboReminderUnit.currentIndex()
         reminderNumber = addWindow.editReminderTime.text()
         tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
         repeatInfo = addWindow.repeatParameters
-        sonID = addWindow.sonID
-        # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, ifCheckRepeat, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonID
-        print repeatInfo
+        sonIDList = addWindow.sonIDList
+          # 给父级事件赋子事件
+        print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo, sonIDList
+        #print repeatInfo
         return
 
 
@@ -467,11 +544,15 @@ class Talendar(QWidget):  # 主界面
         self.rowNum=24 
 
         self.resize(695, 500)
-        self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
-        #self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
+        #self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
+        self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag='w'
         self.initGrid()
-       
+
+        pal = QPalette()
+
+        pal.setColor(self.backgroundRole(), QColor(55, 62, 150))
+        self.setPalette(pal)
         # self.center()
         # self.current_row = 0
         # self.setGeometry(300, 300, 1000, 400)
@@ -529,8 +610,10 @@ class Talendar(QWidget):  # 主界面
 
         btnUpdate = QPushButton(u'同步')
         self.leftLayout.addWidget(btnUpdate)
-        btnNew = QPushButton(u'新建')
+        btnNew = QPushButton()
         self.leftLayout.addWidget(btnNew)
+        btnNew.setFixedSize(70, 70)
+        btnNew.setStyleSheet("border-image:url(new.png)")
 
         btnNew.clicked.connect(newWindow)
         btnDDL = QPushButton(u'DDL列表')
