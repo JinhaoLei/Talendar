@@ -1338,7 +1338,7 @@ class Talendar(QWidget):  # 主界面
                 for i,title in enumerate(scheduletitle):
                     if i<2:
                         if len(title)>6:
-                            title=title[:5]+u'...'
+                            title=title[:6]+u'...'
                         newItem=QListWidgetItem(unicode(title))
                         newItem.setFont(QFont(FontType,FontSize))
                         newItem.setStatusTip(str(scheduleid[i]))
@@ -1457,7 +1457,7 @@ class Talendar(QWidget):  # 主界面
                 comBox.addItem(item_C)
                 return 
         if len(title)>6:
-            title=title[:5]+u'...'
+            title=title[:6]+u'...'
         newItem=QListWidgetItem(unicode(title))
         newItem.setFont(QFont(FontType,FontSize))
         newItem.setStatusTip(str(ID))
@@ -1501,7 +1501,7 @@ class Talendar(QWidget):  # 主界面
             for i,title in enumerate(scheduletitle):
                 if i <2:
                     if len(title)>6:
-                        title=title[:5]+'...'
+                        title=title[:6]+'...'
                     newItem= QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType,FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))
