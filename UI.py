@@ -10,6 +10,7 @@ from calendar import monthrange
 from functools import partial
 import os
 import os.path
+import time
 FontSize = 10
 FontType = "SimHei"
 RowHeight = 90
@@ -880,51 +881,7 @@ class Show(Add):
         if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
             return
 
-class DDL(QWidget):  # DDL列表界面
-    def __init__(self):
-        super(DDL, self).__init__()
-        self.initUI()
 
-    def Repeat(self):
-        repeatWindow = RepeatWindow()
-        if repeatWindow.exec_():
-            return
-
-    def initUI(self):
-        self.mainLayout = QGridLayout(self)
-        self.initToolBar()
-        self.initRight()
-        self.mainLayout.addLayout(self.toolbar, 0, 0)
-        self.mainLayout.addLayout(self.right, 0, 1)
-
-        # self.toolbar = QVBoxLayout()
-        ##self.toolbar.addWidget(btnNew)
-
-        # self.toolbar.addStretch(1)
-
-
-        self.move(300, 150)
-        # self.setWindowTitle('Calculator')
-        # self.show()
-        self.setWindowTitle(u"Deadline")
-
-        self.resize(300, 300)
-        self.show()
-
-    def initToolBar(self):
-        self.toolbar = QVBoxLayout()
-        btnNew = QPushButton(u'新建')
-        self.toolbar.addWidget(btnNew)
-        btnDelete = QPushButton(u'删除')
-        self.toolbar.addWidget(btnDelete)
-
-        self.toolbar.addStretch(1)
-
-    def initRight(self):
-        self.right = QVBoxLayout()
-        issue = QPushButton(U'DDL1')
-        self.right.addWidget(issue)
-        self.right.addStretch(1)
 
 
 def newDDL(self):
@@ -975,6 +932,7 @@ class Talendar(QWidget):  # 主界面
     def __init__(self):
         super(Talendar, self).__init__()
         self.initFolder()
+        self.countDDL=0
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.setWindowTitle("Talendar")
         self.date=datetime.now()
@@ -1068,7 +1026,10 @@ class Talendar(QWidget):  # 主界面
 
 
         self.mainLayout.addLayout(self.leftLayout, 0, 0)
+
         self.tempLayout=QVBoxLayout()
+        #self.tempLayout.sizeHint(500)
+
         self.tempLayout.addLayout(self.topLayout)
         self.tempLayout.addLayout(self.calendarLayout)
         #self.mainLayout.addLayout(self.calendarLayout, 1, 1 )
@@ -1097,7 +1058,7 @@ class Talendar(QWidget):  # 主界面
         self.leftLayout.addWidget(btnSetting)
 
         self.leftLayout.addStretch(1)
-        btnDDL.clicked.connect(newDDL)
+        btnDDL.clicked.connect(self.showDDL)
         ##############updated###################
         change=QPushButton(u'视图转换')
         change.clicked.connect(self.Transform)
@@ -1106,6 +1067,116 @@ class Talendar(QWidget):  # 主界面
         # self.leftLayout.setRowStretch(0, 1)
         # self.leftLayout.setRowStretch(1, 1)
         # self.leftLayout.setColumnStretch(0, 1)
+
+    def initDDL(self):
+        self.DDL = QTableWidget (5,1)
+        #self.DDL.setRowCount(6)
+
+        self.DDL.setColumnWidth(0,250)
+        self.DDL.setRowHeight(0,100)
+        self.DDL.setRowHeight(1,100)
+        self.DDL.setRowHeight(2,100)
+        self.DDL.setRowHeight(3,100)
+        self.DDL.setRowHeight(4,100)
+        self.DDL.setFrameShadow(QFrame.Plain)
+        #self.DDL.setRowHeight(5,100)
+        self.DDL.setHorizontalHeaderLabels([u'DDL列表'])
+        self.timenow = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
+        self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M:%S')
+        self.timeStamp = int(time.mktime(self.timeArray))
+        #timeLeft = time.localtime(timeLeftStamp)
+        #timeLeftStr=time.strftime('%Y-%m-%d %H:%M:%S',timeLeft)
+        item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
+        deadLine = (str('2017-12-20 23:59:59'),str('2017-12-10 23:59:59'),str('2017-12-13 23:59:59'),str('2017-12-17 23:59:59'),str('2017-12-7 23:59:59'),str('2017-12-6 23:59:59'))
+        flag =[0,0,0,0,0,0]#最后一位是为了移动方便，其实不用这个
+        timeStampMax = 15778116610
+        timeLeftStamp = [timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax]
+        for i in range(0,len(item)):
+            timeddl = time.strptime(deadLine[i],'%Y-%m-%d %H:%M:%S')
+            timeDDL = int(time.mktime(timeddl))
+            timeLeftStampTemp = timeDDL-self.timeStamp
+            for j in range(0,len(flag)-1):
+                if(timeLeftStampTemp<timeLeftStamp[j] ):
+                    for k in range(j,len(flag)-1):
+                       kk=j+len(flag)-1-k-1
+                       flag[kk+1]=flag[kk]
+                       timeLeftStamp[kk+1] = timeLeftStamp[kk]
+
+                    timeLeftStamp[j]=timeLeftStampTemp
+                    flag[j] = i
+                    break
+
+        for m in range(0,len(flag)-1):
+            self.initDDLItem(item[flag[m]],deadLine[flag[m]])
+            self.DDL.setCellWidget(m,0,self.DDLItem)
+
+    def initDDLItem(self,item,deadLine):
+        self.DDLItem = QTableWidget (3,1)
+
+        self.DDLItem.setColumnWidth(0,200)
+
+        self.DDLItem.setRowHeight(1,30)
+        self.DDLItem.setRowHeight(2,30)
+        self.DDLItem.setRowHeight(0,30)
+        self.DDLItem.setVerticalHeaderLabels([u'内容',u'截止时间',u'剩余时间'])
+        self.DDLItem.setShowGrid(False)
+        self.DDLItem.horizontalHeader().hide()
+
+        timeddl = time.strptime(deadLine,'%Y-%m-%d %H:%M:%S')
+        timeDDL = int(time.mktime(timeddl))
+        timeLeftStampTemp = timeDDL-self.timeStamp
+
+        timeLeftDay=timeLeftStampTemp/86400
+        timeLeftHour=(timeLeftStampTemp-timeLeftDay*86400 )/3600
+        timeLeftMin=(timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600)/60
+        timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
+
+        LeftTime = str(timeLeftDay )+u'天'+str(timeLeftHour)+u'小时'+str(timeLeftMin )+u'分钟'+str(timeLeftSec )+u'秒'
+
+
+
+
+        newitem = QTableWidgetItem(item)
+        #newitem.setBackgroundColor(QColor(100,25,25) )
+        self.DDLItem.setItem(0,0,newitem)
+        newitem = QTableWidgetItem(deadLine)
+        self.DDLItem.setItem(1,0,newitem)
+        newitem = QTableWidgetItem(LeftTime)
+
+        if(timeLeftStampTemp>7*86400):
+            newitem.setBackgroundColor(QColor(0,255,0) )
+        else :
+            if(timeLeftStampTemp >3*86400):
+                newitem.setBackgroundColor(QColor(255,255,0) )
+            else:
+                newitem.setBackgroundColor(QColor(255,0,0) )
+
+        self.DDLItem.setItem(2,0,newitem)
+
+
+
+
+
+
+
+
+
+
+
+    def showDDL(self):
+        self.countDDL=1-self.countDDL
+        if self.countDDL> 0 :
+            self.resize(1156, 600)
+            self.initDDL()
+            self.mainLayout.addWidget(self.DDL,0,2)
+            self.mainLayout. setColumnStretch(1, 2);
+            #self.mainLayout.setColumnStretch(1, 5);
+            #self.mainLayout. setColumnStretch(1, 2);
+            #self.mainLayout.setColumnStretch(10, 2);
+
+        else :
+            self.DDL.hide()
+            self.resize(880,600)
 
     def fillBlank(self, flag, start, end):  # column 1 row 0
         for i in range(start, end):
