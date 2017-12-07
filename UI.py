@@ -932,7 +932,7 @@ class Talendar(QWidget):  # 主界面
     def __init__(self):
         super(Talendar, self).__init__()
         self.initFolder()
-        self.countDDL=0
+        self.ddlFlag = False
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.setWindowTitle("Talendar")
         self.date=datetime.now()
@@ -949,13 +949,15 @@ class Talendar(QWidget):  # 主界面
 
         pal.setColor(self.backgroundRole(), QColor(55, 62, 150))
         self.setPalette(pal)
-        #a = getcompletelist()
-        #print a
-        # self.center()
-        # self.current_row = 0
-        # self.setGeometry(300, 300, 1000, 400)
-        # elf.setWindowTitle('Talendar')
-        # self.setWindowIcon(QtGui.QIcon('icon.png'))
+
+        self.timer = QTimer(self)
+        self.count = 0
+        self.timer.timeout.connect(self.updateDDL)
+        self.startCount()
+
+    def startCount(self):
+        self.timer.start(60000)
+
 
 
 
@@ -1081,18 +1083,38 @@ class Talendar(QWidget):  # 主界面
         self.DDL.setFrameShadow(QFrame.Plain)
         #self.DDL.setRowHeight(5,100)
         self.DDL.setHorizontalHeaderLabels([u'DDL列表'])
-        self.timenow = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
-        self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M:%S')
+        self.timenow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
+        self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M')
         self.timeStamp = int(time.mktime(self.timeArray))
+        #print self.timeStamp
         #timeLeft = time.localtime(timeLeftStamp)
         #timeLeftStr=time.strftime('%Y-%m-%d %H:%M:%S',timeLeft)
-        item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
-        deadLine = (str('2017-12-20 23:59:59'),str('2017-12-10 23:59:59'),str('2017-12-13 23:59:59'),str('2017-12-17 23:59:59'),str('2017-12-7 23:59:59'),str('2017-12-6 23:59:59'))
-        flag =[0,0,0,0,0,0]#最后一位是为了移动方便，其实不用这个
+        items = getcompletelist()
+        titleList = []
+        endDateList = []
+        for item in items:
+            if len(item) == 17:
+                id, title, loc, startTime, endTime, reminder, reminderUnit, \
+                reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+                checkBoxGroup, sonID, note  = item
+            elif len(item) ==18:
+                id, title, loc, startTime, endTime, reminder, reminderUnit, \
+                reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+                checkBoxGroup, sonID, sonIDList, note = item
+            if int(reminder) == 1:
+                titleList.append(unicode(title))
+                temp = endTime.split()
+                endTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
+                endDateList.append(endTime)
+        #item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
+        #deadLine = (str('2017-12-20 23:59'),str('2017-12-10 23:59'),str('2017-12-13 23:59'),str('2017-12-17 23:59'),str('2017-12-7 23:59'),str('2017-12-6 23:59'))
+        flag = [i for i in range(len(titleList))]
+        flag.append(0)
+        #flag =[0,1,2,0,0,0]#最后一位是为了移动方便，其实不用这个
         timeStampMax = 15778116610
         timeLeftStamp = [timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax]
-        for i in range(0,len(item)):
-            timeddl = time.strptime(deadLine[i],'%Y-%m-%d %H:%M:%S')
+        for i in range(len(titleList)):
+            timeddl = time.strptime(endDateList[i],'%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
             timeLeftStampTemp = timeDDL-self.timeStamp
             for j in range(0,len(flag)-1):
@@ -1107,7 +1129,7 @@ class Talendar(QWidget):  # 主界面
                     break
 
         for m in range(0,len(flag)-1):
-            self.initDDLItem(item[flag[m]],deadLine[flag[m]])
+            self.initDDLItem(titleList[flag[m]],endDateList[flag[m]])
             self.DDL.setCellWidget(m,0,self.DDLItem)
 
     def initDDLItem(self,item,deadLine):
@@ -1122,16 +1144,16 @@ class Talendar(QWidget):  # 主界面
         self.DDLItem.setShowGrid(False)
         self.DDLItem.horizontalHeader().hide()
 
-        timeddl = time.strptime(deadLine,'%Y-%m-%d %H:%M:%S')
+        timeddl = time.strptime(deadLine,'%Y-%m-%d %H:%M')
         timeDDL = int(time.mktime(timeddl))
         timeLeftStampTemp = timeDDL-self.timeStamp
 
         timeLeftDay=timeLeftStampTemp/86400
         timeLeftHour=(timeLeftStampTemp-timeLeftDay*86400 )/3600
         timeLeftMin=(timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600)/60
-        timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
+        #timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
 
-        LeftTime = str(timeLeftDay )+u'天'+str(timeLeftHour)+u'小时'+str(timeLeftMin )+u'分钟'+str(timeLeftSec )+u'秒'
+        LeftTime = str(timeLeftDay )+u'天'+str(timeLeftHour)+u'小时'+str(timeLeftMin )+u'分钟'
 
 
 
@@ -1154,22 +1176,19 @@ class Talendar(QWidget):  # 主界面
         self.DDLItem.setItem(2,0,newitem)
 
 
+    def reverseDDLFlag(self):
+        if self.ddlFlag:
+            self.ddlFlag = False
+        else:
+            self.ddlFlag = True
 
-
-
-
-
-
-
-
-
-    def showDDL(self):
-        self.countDDL=1-self.countDDL
-        if self.countDDL> 0 :
+    def updateDDL(self):
+        if self.ddlFlag:
             self.resize(1156, 600)
             self.initDDL()
             self.mainLayout.addWidget(self.DDL,0,2)
-            self.mainLayout. setColumnStretch(1, 2);
+            self.mainLayout. setColumnStretch(1, 2)
+
             #self.mainLayout.setColumnStretch(1, 5);
             #self.mainLayout. setColumnStretch(1, 2);
             #self.mainLayout.setColumnStretch(10, 2);
@@ -1177,6 +1196,14 @@ class Talendar(QWidget):  # 主界面
         else :
             self.DDL.hide()
             self.resize(880,600)
+
+
+    def showDDL(self):
+        self.reverseDDLFlag()
+        self.updateDDL()
+
+
+
 
     def fillBlank(self, flag, start, end):  # column 1 row 0
         for i in range(start, end):
@@ -1323,6 +1350,8 @@ class Talendar(QWidget):  # 主界面
             a = details('3')
             #print 'hahahahahah'
             self.refresh()
+
+
             return
 
     def mousePressEvent(self, event):
@@ -1353,6 +1382,7 @@ class Talendar(QWidget):  # 主界面
             self.grid.close()
             self.grid=self.MonthGrid()
             self.calendarLayout.addWidget(self.grid)
+        self.updateDDL()
         #a = getcompletelist()
         #print 'all------'
         #print a
@@ -1436,13 +1466,6 @@ class Talendar(QWidget):  # 主界面
             beginDate=beginDate+timedelta(1)
 
         return grid
-
-
-    #def getHourScheduleTitle(self,time):#事件获取接口，传入"Y-M-D-H"
-        #print time
-    #    return [[56,12],[u"软件考试",u"电镜考试"]]#,u"很多很多很多很多很多考试"]]
-    #def getDayScheduleTitle(self,time):#事件获取接口，传入"Y-M-D"
-        #print time
 
 
     def getDayScheduleTitle(self, endDate):
