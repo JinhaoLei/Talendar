@@ -11,10 +11,12 @@ from functools import partial
 import os
 import os.path
 import time
+from get_class import *
 FontSize = 10
 FontType = "SimHei"
 RowHeight = 90
 ColWidth = 100
+pic_dir = "./pic/"
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -797,7 +799,6 @@ class Show(Add):
     def __init__(self, id):
         super(Show, self).__init__()
         self.setWindowTitle(u"详细信息")
-
         self.id = str(id)
         #print self.id
         self.btnDelete = QPushButton(u'删除')
@@ -844,9 +845,13 @@ class Show(Add):
         if note != 'None':
             self.editNote.setText(unicode(note))
         self.comboReminder.setCurrentIndex(int(reminder))
+        #print reminder
         self.comboReminderUnit.setCurrentIndex(int(reminderUnit))
-        if reminderNumber != 'None':
+        #print reminderNumber
+        if reminderNumber != 'None' or int(reminderNumber) >0:
             self.editReminderTime.setText(reminderNumber)
+        else:
+            self.editReminderTime.setText('22')
 
         tags = tags.split(',')
         for i in range(5):
@@ -936,7 +941,8 @@ class Talendar(QWidget):  # 主界面
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.setWindowTitle("Talendar")
         self.date=datetime.now()
-        self.rowNum=24 
+        self.rowNum=24
+        #self.setWindowFlags(Qt.CustomizeWindowHint)
 
         #self.resize(695, 500)
         self.resize(880, 600)
@@ -996,11 +1002,129 @@ class Talendar(QWidget):  # 主界面
     def initDB(self):
         pass
 
+    def update(self):
+        classes = get_class("sheet.xls")
+
+        for cla in classes:
+            title, loc, startTime, endTime, _, _, tags, \
+            repeatUnit, repeatFre, radioSelected, endTimes, endDate, checkBoxGroup, note = cla
+
+            fname = "data/root/0_time_routine_ls"
+            fname_sonIDlist = "data/list/sonIDlist"
+            f_sonIDlist = open(fname_sonIDlist, 'w')
+            with open(fname, 'r') as f:
+                lines = f.readlines()
+                last_line = lines[-1]
+                penult_line = lines[-2]
+            list1 = last_line.split(' ')
+            list2 = penult_line.split(' ')
+            # print list1
+            # print list2
+            last_num = int(list1[0])
+            if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
+            f.close()
+            # if last_line[1] == '':
+            #    sonIDList.append(sonIDList[-1] + 1)
+            # elif last_line[1] != '':
+            #    sonIDList.append(last_num + 1)
+            f_sonIDlist.write('0' + ' ')
+            f_sonIDlist.write(str(last_num + 1) + '\n')
+            f_sonIDlist.close()
+            f = open(r"data/list/new", 'w')
+            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
+                    '[False, False, False, False, False, False, False]', '\n']
+            f.writelines(list)
+            f.close()
+            startDate = startTime.split()[0]
+            startHour = startTime.split()[1].split(':')[0]
+            startMinute = startTime.split()[1].split(':')[1]
+            endDate = endTime.split()[0]
+            endHour = endTime.split()[1].split(':')[0]
+            endMinute = endTime.split()[1].split(':')[1]
+            name = title
+            reminder = 0
+            reminderUnit = 0
+            reminderNumber = '-1'
+
+            f_tags = open(r"data/root/tags", 'r')
+            tags_list = f_tags.readlines()
+            f_tags.close()
+            f_tags = open(r"data/root/tags", 'w')
+            f_tags.writelines(tags_list)
+
+            filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
+            flag = False
+            tags = tags.split(",")
+
+            for i in range(5):
+                if tags[i] != '':
+                    for j in range(tags_list.__len__()):
+                        if str(tags[i]) == tags_list[j].replace('\n', ''):
+                            flag = True
+                    if not flag:
+                        f_tags.write(str(tags[i]) + '\n')
+                    tag_filename = 'data/root/' + tags[i]
+                    f_special_tags = open(tag_filename.decode('utf-8'), 'a')
+                    f_special_tags.write(
+                        str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
+                        + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
+                    f_special_tags.close()
+            f_tags.close()
+            # repeatInfo = addWindow.repeatParameters
+            # sonIDList = addWindow.sonIDList
+            # 给父级事件赋子事件
+            note_path = 'data/note/' + str(last_num + 1)
+            path = 'data/list/' + filename
+            f_notefile = open(note_path, 'w')
+            f_notefile.write(note)
+            f_notefile.close()
+            f = open(path, 'w')
+            f.write(str(last_num + 1) + '\n')
+            f.write(name + '\n')
+            f.write(loc + '\n')
+            f.write(startDate + ' ' + startHour + ' ' + startMinute + '\n')
+            f.write(endDate + ' ' + endHour + ' ' + endMinute + '\n')
+            f.write(str(reminder) + '\n')
+            f.write(str(reminderUnit) + '\n')
+            f.write(reminderNumber + '\n')
+            for i in range(5):
+                f.write(str(tags[i]) + ',')
+            f.write('\n')
+            f_repeat = open(r"data/list/new", 'r')
+            repeat_list = f_repeat.readlines()
+            f_repeat.close()
+            f.writelines(repeat_list)
+            f_sonIDlist = open(fname_sonIDlist, 'r')
+            son_list = f_sonIDlist.readlines()
+            # print son_list
+            f.writelines(son_list)
+            f_sonIDlist.close()
+            os.remove(fname_sonIDlist)
+            os.remove(r'data/list/new')
+            f.close()
+            # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
+            # time_routine_list = f_time_routine.readlines()
+            # time_routine_list.insert(last_num+1,str(last_num+1)+' '+filename)
+            # f_time_routine.close()
+            f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
+            f_time_routine.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
+                                 + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
+            # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
+            # print repeatInfo
+            f_time_routine.close()
+        QMessageBox.information(self, u'提示', u'同步完成',
+                            QMessageBox.Yes, QMessageBox.Yes)
+
+
     def initGrid(self):
+
+
+
         self.initLeftGrid()  # 初始化左侧菜单栏
         self.initCalendarGrid()  # 初始化右侧日历表格界面
         self.initTopGrid()
         self.initMainGrid()  # 构建主布局
+
         #self.addNewEvent(3,2,1,u'test')
 	
 
@@ -1008,18 +1132,23 @@ class Talendar(QWidget):  # 主界面
         self.topLayout=QHBoxLayout()
         
         self.year=QLabel(self.date.strftime("%Y"))
-	    #self.topLayout.addWidget(self.year)
-        upperPage = QPushButton(u'上一页')
+        #self.topLayout.addWidget(self.year)
+        self.topLayout.addStretch(1)
+        upperPage = QPushButton()
+        upperPage.setFixedSize(21, 33)
+        upperPage.setStyleSheet("border-image:url(./pic/forward.png)")
         self.topLayout.addWidget(upperPage)
         upperPage.clicked.connect(self.upPage)
-        nextPage = QPushButton(u'下一页')
+        nextPage = QPushButton()
         self.topLayout.addWidget(nextPage)
+        nextPage.setFixedSize(21, 33)
 
-
+        nextPage.setStyleSheet("border-image:url(./pic/next.png)")
         nextPage.clicked.connect(self.nextPage)
 
     def initMainGrid(self):
         self.mainLayout = QGridLayout(self)
+
         self.mainLayout.setSpacing(20)
         self.mainLayout.setRowStretch(0,10)
         self.mainLayout.setRowStretch(1,1)
@@ -1046,25 +1175,45 @@ class Talendar(QWidget):  # 主界面
         self.leftLayout = QVBoxLayout()
         # self.leftLayout.setMargin(10)
 
-        btnUpdate = QPushButton(u'同步')
+        #btnIcon = QPushButton()
+        #btnIcon.setFixedSize(48, 10)
+        #btnIcon.setStyleSheet("border-image:url(./pic/title.png)")
+        #self.leftLayout.addWidget(btnIcon)
+
+        topSpace = QSpacerItem(1, 80)
+        self.leftLayout.addItem(topSpace)
+        btnUpdate = QPushButton()
+        btnUpdate.setFixedSize(76, 20)
+        btnUpdate.setStyleSheet("border-image:url(./pic/update.png)")
+        btnUpdate.clicked.connect(self.update)
         self.leftLayout.addWidget(btnUpdate)
         btnNew = QPushButton()
         self.leftLayout.addWidget(btnNew)
-        btnNew.setFixedSize(70, 70)
-        btnNew.setStyleSheet("border-image:url(new2.png)")
+        btnNew.setFixedSize(77, 28)
+        btnNew.setStyleSheet("border-image:url(./pic/new.png)")
 
         btnNew.clicked.connect(self.newWindow)
-        btnDDL = QPushButton(u'DDL列表')
+        btnDDL = QPushButton()
         self.leftLayout.addWidget(btnDDL)
-        btnSetting = QPushButton(u'设置')
-        self.leftLayout.addWidget(btnSetting)
+        btnDDL.setFixedSize(81, 29)
+        btnDDL.setStyleSheet("border-image:url(./pic/ddl.png)")
 
-        self.leftLayout.addStretch(1)
+        change = QPushButton()
+        change.clicked.connect(self.Transform)
+        change.setFixedSize(74, 27)
+        change.setStyleSheet("border-image:url(./pic/screen.png)")
+        self.leftLayout.addWidget(change)
+
+        btnSetting = QPushButton()
+        self.leftLayout.addWidget(btnSetting)
+        btnSetting.setFixedSize(75, 28)
+        btnSetting.setStyleSheet("border-image:url(./pic/settings.png)")
+
+
         btnDDL.clicked.connect(self.showDDL)
         ##############updated###################
-        change=QPushButton(u'视图转换')
-        change.clicked.connect(self.Transform)
-        self.leftLayout.addWidget(change)
+
+        self.leftLayout.addStretch(1)
 
         # self.leftLayout.setRowStretch(0, 1)
         # self.leftLayout.setRowStretch(1, 1)
@@ -1183,19 +1332,27 @@ class Talendar(QWidget):  # 主界面
             self.ddlFlag = True
 
     def updateDDL(self):
+        print self.ddlFlag
         if self.ddlFlag:
             self.resize(1156, 600)
             self.initDDL()
             self.mainLayout.addWidget(self.DDL,0,2)
-            self.mainLayout. setColumnStretch(1, 2)
+            self.mainLayout.setColumnStretch(1, 2)
 
             #self.mainLayout.setColumnStretch(1, 5);
             #self.mainLayout. setColumnStretch(1, 2);
             #self.mainLayout.setColumnStretch(10, 2);
 
         else :
-            self.DDL.hide()
-            self.resize(880,600)
+            try:
+                #print 'here'
+                self.DDL.close()
+                #self.DDL.destroy()
+                self.resize(880, 600)
+            except:
+             #   #print 'here2'
+                pass
+
 
 
     def showDDL(self):
@@ -1388,6 +1545,7 @@ class Talendar(QWidget):  # 主界面
         #print a
     def Transform(self):
         self.transFlag()
+        self.ddlFlag = False
         self.refresh()
 
 
@@ -1438,8 +1596,8 @@ class Talendar(QWidget):  # 主界面
                 otherschedule=[]
                 for i,title in enumerate(scheduletitle):
                     if i<2:
-                        if len(title)>6:
-                            title=title[:6]+u'...'
+                        if len(title)>18:
+                            title=title[:18]+u'...'
                         newItem=QListWidgetItem(unicode(title))
                         newItem.setFont(QFont(FontType,FontSize))
                         newItem.setStatusTip(str(scheduleid[i]))
@@ -1550,8 +1708,8 @@ class Talendar(QWidget):  # 主界面
                 item_C.setStatusTip(str(ID)+'-')
                 comBox.addItem(item_C)
                 return 
-        if len(title)>6:
-            title=title[:6]+u'...'
+        if len(title)>18:
+            title=title[:18]+u'...'
         newItem=QListWidgetItem(unicode(title))
         newItem.setFont(QFont(FontType,FontSize))
         newItem.setStatusTip(str(ID))
@@ -1594,8 +1752,8 @@ class Talendar(QWidget):  # 主界面
 
             for i,title in enumerate(scheduletitle):
                 if i <2:
-                    if len(title)>6:
-                        title=title[:6]+'...'
+                    if len(title)>18:
+                        title=title[:18]+'...'
                     newItem= QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType,FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))
