@@ -1203,7 +1203,6 @@ class Talendar(QWidget):  # 主界面
         change.setFixedSize(74, 27)
         change.setStyleSheet("border-image:url(./pic/screen.png)")
         self.leftLayout.addWidget(change)
-
         btnSetting = QPushButton()
         self.leftLayout.addWidget(btnSetting)
         btnSetting.setFixedSize(75, 28)
@@ -1380,6 +1379,7 @@ class Talendar(QWidget):  # 主界面
         # self.setGeometry(300, 300, 290, 150)
         self.setWindowTitle('Emit signal')
         self.show()
+        #twinkle([1,2,4])
 
     def newWindow(self):  # 新建事项窗口的接口
         fname = "data/root/0_time_routine_ls"
@@ -1540,6 +1540,7 @@ class Talendar(QWidget):  # 主界面
             self.grid=self.MonthGrid()
             self.calendarLayout.addWidget(self.grid)
         self.updateDDL()
+        #twinkle([1,2,3])
         #a = getcompletelist()
         #print 'all------'
         #print a
@@ -1548,7 +1549,63 @@ class Talendar(QWidget):  # 主界面
         self.ddlFlag = False
         self.refresh()
 
+    def twinkle_b(self):
+        import time
+        nolist=self.nolist
+        colnum=7
+        rownum=self.rowNum
+        templist=[]
+        colorlist=[]
+        for i in range(colnum):
+            for j in range(rownum):
+                tempWidget=self.grid.cellWidget(j,i)
+                n=tempWidget.count()
+                if self.pageFlag=='w':
+                    n=n-1
+                for w in range(n):
+                    if self.pageFlag=='w':
+                        w=w+1
+                    #print w
+                    items=tempWidget.item(w)
+                    numlist=items.statusTip()
+                    #print numlist
+                    numlist=numlist.split('-')
+                    #print numlist
+                    for w,item in enumerate(numlist) :
+                        #print item
+                        if  not item=='' and int(item) in nolist:
+                            items.setBackground(QColor(Qt.yellow))
+                            templist.append(items)
+                            colorlist.append(item)
+        return templist,colorlist
 
+    def twinkle_d(self,templist,colorlist):
+        for i,item in enumerate(templist):
+            item.setBackground(self.getColor(colorlist[i]))
+
+    def twinkle(self,nolist):#闪烁调用接口，需要传入id的list，id为字符串格式。利用了self.nolist, self.templist和self.colorlist来传参，可以调整闪烁时间和闪烁次数
+        self.nolist=nolist
+        self.templist=[]
+        self.colorlist=[]
+        self.times=QTimer(self)
+        self.ww=0
+        self.times.timeout.connect(self.twinkle__)
+        self.times.start(100)#闪烁时间
+
+    def twinkle__(self):
+        if self.ww>15:#闪烁次数
+            self.times.stop()
+        if self.ww%2==1:
+            self.templist,self.colorlist=self.twinkle_b()
+        else:
+            self.twinkle_d(self.templist,self.colorlist)
+        self.ww+=1
+
+    def getColor(self,no):
+        if no==-1:
+            return QColor(125,234,234,125)
+        colortable=[QColor(234,123,123,125),QColor(125,125,234,125),QColor(125,200,123,125),QColor(120,130,210,125),QColor(125,150,160,125)]
+        return colortable[int(no)%len(colortable)]
 
     def WeekGrid(self):
         rowNum = self.rowNum       
@@ -1564,9 +1621,13 @@ class Talendar(QWidget):  # 主界面
         for column in range(7):
             grid.setColumnWidth(column, column_width[column])
         for row in range(rowNum):
-            grid.setRowHeight(row, 65)
-
-        grid.setHorizontalHeaderLabels(self.headerlabels)
+            grid.setRowHeight(row, 90)
+        tempheaderlabels=[]
+        beginDate=self.date-timedelta(todayCol)
+        for item in self.headerlabels:
+            tempheaderlabels.append(item+'\n'+beginDate.strftime("%Y-%m-%d"))
+            beginDate=beginDate+timedelta(1)
+        grid.setHorizontalHeaderLabels(tempheaderlabels)
         grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
         rowlabels = []
 
@@ -1575,10 +1636,14 @@ class Talendar(QWidget):  # 主界面
 
         grid.setVerticalHeaderLabels(rowlabels)
         ##############################################
+       
         beginDate=self.date-timedelta(todayCol)
         flag_=0
         if self.date.strftime("%Y%m%d")==strftime("%Y%m%d"):
             flag_=1
+            tableWidgetItem=grid.horizontalHeaderItem(todayCol)
+            tableWidgetItem.setForeground(QBrush(QColor(Qt.red)))#DsetBackgroundColor(QColor(Qt.yellow))
+            grid.setHorizontalHeaderItem(todayCol, tableWidgetItem)
         for col in range(7):
             if not col==todayCol:
                 flag=0
@@ -1586,12 +1651,11 @@ class Talendar(QWidget):  # 主界面
                 flag=1
             for row in range(rowNum):
                 scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1))
-                #print scheduleid
-                #print scheduletitle
                 comBox=QListWidget()
                 newItem=QListWidgetItem('')
                 newItem.setFont(QFont(FontType,FontSize))
-                #newItem.setStatusTip(str(scheduleid[i]))
+                newItem.setFlags(Qt.NoItemFlags)
+                
                 comBox.addItem(newItem)
                 otherschedule=[]
                 for i,title in enumerate(scheduletitle):
@@ -1601,9 +1665,8 @@ class Talendar(QWidget):  # 主界面
                         newItem=QListWidgetItem(unicode(title))
                         newItem.setFont(QFont(FontType,FontSize))
                         newItem.setStatusTip(str(scheduleid[i]))
-                        if flag==1:
-                            #"pass"
-                            newItem.setBackground(QBrush(QColor(Qt.yellow)))
+                        newItem.setBackground(self.getColor(scheduleid[i]))
+                        
                         comBox.addItem(newItem)
                     else:
                         otherschedule.append(scheduleid[i])
@@ -1615,11 +1678,13 @@ class Talendar(QWidget):  # 主界面
                     for item in otherschedule:
                         status=status+str(item)+'-'
                     newItem.setStatusTip(status)
-                    if flag==1:
-                        #print "pass"
-                        newItem.setBackground(QBrush(QColor(Qt.yellow)))
+                    newItem.setBackground(self.getColor(-1))#QColor(Qt.yellow)))
                     comBox.addItem(newItem)
                 comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
+                
+                comBox.setStyleSheet("QListWidget::item:selected:!active{background:none;color:#19649F;border-width:2px;}"
+                "QListWidget::Item:hover{background:skyblue;}"
+                "QListWidget::item:selected:active{background:none;color:#19649F;border-width:-1;}")
                 grid.setCellWidget(row,col,comBox)
             beginDate=beginDate+timedelta(1)
 
@@ -1654,12 +1719,19 @@ class Talendar(QWidget):  # 主界面
             temp = lists[i].split(' ')
             #print temp
             temp_list = temp[1].split('-')
+            temp_list1= temp[2].split('-')
             if len(temp_list[2]) == 1:
                 temp_list[2] = '0' + temp_list[2]
-            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2] + '-' + temp_list[3]
+            if len(temp_list1[2])==1:
+                temp_list1[2]='0'+temp_list1[2]
+            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2] 
+            endhour=int(temp_list[3])
+            temp_beginDate=temp_list1[0]+'-'+temp_list1[1]+'-'+temp_list1[2]
+            beginhour=int(temp_list1[3])
             #print temp_endDate
             #print endDate
-            if temp_endDate == startDate:
+            print endhour,beginhour
+            if temp_endDate == startDate[:-2] and endhour<=int(startDate[-1]) and beginhour>=int(startDate[-1]) :
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
         _list.append(IDlist)
@@ -1668,6 +1740,8 @@ class Talendar(QWidget):  # 主界面
 
     def mouseDoubleClicked(self,eve):
         self.mouseClicked(eve.statusTip())
+        #isSelected(False)
+       
 
     def mouseClicked(self, ID):#鼠标响应接口，需要对ID类型进行判断，如果为空，则直接返回，不为空，分为单个时间和多个事件，多个事件一定以‘-’结尾
         #print ID
@@ -1747,6 +1821,7 @@ class Talendar(QWidget):  # 主界面
 
             if self.date.strftime("%Y-%m-%d")==strftime("%Y-%m-%d") and day==int(self.date.strftime("%d") )-1:
                 newItem.setBackground(QBrush(QColor(Qt.yellow)))
+            newItem.setFlags(Qt.NoItemFlags)
             comBox.addItem(newItem)
             otherschedule=[]
 
@@ -1757,6 +1832,7 @@ class Talendar(QWidget):  # 主界面
                     newItem= QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType,FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))
+                    newItem.setBackground(self.getColor(scheduleid[i]))
                     comBox.addItem(newItem)
                 else:
                     otherschedule.append(scheduleid[i])
@@ -1768,8 +1844,13 @@ class Talendar(QWidget):  # 主界面
                 for item in otherschedule:
                     status=status+str(item)+'-'
                 newItem.setStatusTip(status)
+                newItem.setBackground(self.getColor(-1))
                 comBox.addItem(newItem)
             comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
+
+            comBox.setStyleSheet("QListWidget::item:selected:!active{background:none;color:#19649F;border-width:2px;}"
+                "QListWidget::Item:hover{background:skyblue;}"
+                "QListWidget::item:selected:active{background:none;color:#19649F;border-width:-1;}")
             #grid.setCellWidget(0,3,comBox)
             #tempDay=QTableWidgetItem(text)
             tempCol=beginCol
