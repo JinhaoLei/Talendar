@@ -1666,7 +1666,7 @@ class Talendar(QWidget):  # 主界面
                         newItem.setFont(QFont(FontType,FontSize))
                         newItem.setStatusTip(str(scheduleid[i]))
                         newItem.setBackground(self.getColor(scheduleid[i]))
-                        #newItem.setStyleSheet("""QListWidget.item:selected{background:wight}""")
+                        
                         comBox.addItem(newItem)
                     else:
                         otherschedule.append(scheduleid[i])
