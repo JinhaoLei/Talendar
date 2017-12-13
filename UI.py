@@ -67,15 +67,24 @@ def getlist():
     del lists[0]
     #print lists
     return lists
-
 def get_tag_list(tag):
+
     path = u'data/root/'.encode('utf-8') + tag
+
     f = open(path.decode('utf8'), 'r')
     lists = f.readlines()
     for i in range(lists.__len__()):
         lists[i] = lists[i].replace('\n', '')
     return lists
-
+def getTagList():
+    f = open(r"data/root/tags", 'r')
+    tags = []
+    for n, line in enumerate(f):
+        if n == 0:
+            pass
+        else:
+            tags.append(line.strip())
+    return tags
 def getcompletelist():
     full_list = []
     lists = getlist()
@@ -805,6 +814,15 @@ class Show(Add):
         self.btnDelete.clicked.connect(self.DeleteItem)
         self.bottomLayout.addWidget(self.btnDelete, 3, 3)
         self.showInfo(details(self.id))
+        self.buttonSon.setText(u"显示子事件")
+        if self.sonIDList =="":
+            self.buttonSon.setEnabled(False)
+
+    def newSubWindow(self):
+        self.accept()
+    def test(self):
+        print "here"
+
     def DeleteItem(self):
 
         reply = QMessageBox.question(self, u'警告', u'你确定要删除该事项吗', QMessageBox.Yes |
@@ -822,11 +840,14 @@ class Show(Add):
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
         reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
         checkBoxGroup, sonID, note  = infoList
+            self.sonIDList = ""
         elif len(infoList) ==18:
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
             reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
             checkBoxGroup, sonID, sonIDList, note = infoList
+            self.sonIDList = sonIDList[:-1].split(",")
         self.id = id
+
         #self.currentDate = startTime.split()[0]
         self.repeatInfo = []
         self.repeatInfo.extend([comboUnit, frequency, radioSelected, endTimes, \
@@ -894,6 +915,37 @@ def newDDL(self):
     if addWindow.exec_():
         return
 
+class otherTag(QDialog):
+    def __init__(self):
+        super(otherTag, self).__init__()
+        self.initLayout()
+        self.setWindowTitle(u'其他标签')
+        self.show()
+    def initLayout(self):
+        self.layout = QVBoxLayout(self)
+        self.lblInfo = QLabel(u'请输入希望查找的标签：')
+        self.edit = QLineEdit()
+        self.layout.addWidget(self.lblInfo)
+        self.layout.addWidget(self.edit)
+        #buttonsOkCancel = QDialogButtonBox(
+        #    QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+        #    Qt.Horizontal, self)
+        #buttonsOkCancel.accepted.connect(self.accept)
+        #buttonsOkCancel.rejected.connect(self.reject)
+        self.btnYes = QPushButton(u'确定')
+        self.layout.addWidget(self.btnYes)
+        self.btnYes.clicked.connect(self.check)
+    def check(self):
+        tag = self.edit.text()
+        tagList = getTagList()
+        #print unicode(tagList[0]), unicode(tagList[1])
+        #print tag
+        if unicode(tag) in tagList:
+            self.accept()
+            self.tag = tag
+        else:
+            QMessageBox.warning(self, u'警告', u'无包含此标签的事项',
+                                QMessageBox.Yes, QMessageBox.Yes)
 
 
 class multiItem(QDialog):
@@ -908,6 +960,7 @@ class multiItem(QDialog):
         # print id
         showWindow = Show(id)
         if showWindow.exec_():
+            print "经过"
             self.accept()
             return
     def initLayout(self):
@@ -938,10 +991,12 @@ class Talendar(QWidget):  # 主界面
         super(Talendar, self).__init__()
         self.initFolder()
         self.ddlFlag = False
+        self.targetTag = None
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.setWindowTitle("Talendar")
         self.date=datetime.now()
         self.rowNum=24
+        self.filterFlag = 0
         #self.setWindowFlags(Qt.CustomizeWindowHint)
 
         #self.resize(695, 500)
@@ -958,8 +1013,10 @@ class Talendar(QWidget):  # 主界面
 
         self.timer = QTimer(self)
         self.count = 0
+
         self.timer.timeout.connect(self.updateDDL)
         self.startCount()
+
 
     def startCount(self):
         self.timer.start(60000)
@@ -1167,6 +1224,42 @@ class Talendar(QWidget):  # 主界面
         #self.mainLayout.addLayout(self.topLayout,0,1)
         #self.topLayout.setMaximumWidth(20)
         self.mainLayout.addLayout(self.tempLayout,0,1)
+    def targetCourse(self):
+        self.targetTag = '课程'
+        self.refresh()
+    def targetHomework(self):
+        self.targetTag = '作业'
+        self.refresh()
+    def targetConf(self):
+        self.targetTag = '活动/会议'
+        self.refresh()
+    def targetOther(self):
+        otherTagWindow = otherTag()
+        if otherTagWindow.exec_():
+            self.targetTag = unicode(otherTagWindow.tag)
+            self.refresh()
+            return
+
+    #def targetCourse(self):
+    #    self.targetTag = ''
+    def showFilter(self):
+        #self.ckCourse = QCheckBox()
+        if self.filterFlag == 0:
+            self.btnCourse.show()
+            self.btnHomework.show()
+            self.btnConf.show()
+            self.btnOther.show()
+        else:
+            self.btnCourse.hide()
+            self.btnHomework.hide()
+            self.btnConf.hide()
+            self.btnOther.hide()
+            self.targetTag = None
+            self.refresh()
+        self.filterFlag = 1 - self.filterFlag
+
+
+
 
 
 
@@ -1191,8 +1284,14 @@ class Talendar(QWidget):  # 主界面
         self.leftLayout.addWidget(btnNew)
         btnNew.setFixedSize(77, 28)
         btnNew.setStyleSheet("border-image:url(./pic/new.png)")
-
         btnNew.clicked.connect(self.newWindow)
+
+        self.btnFilter = QPushButton()
+        self.leftLayout.addWidget(self.btnFilter)
+        self.btnFilter.setFixedSize(81, 29)
+        self.btnFilter.setStyleSheet("border-image:url(./pic/ddl.png)")
+        self.btnFilter.clicked.connect(self.showFilter)
+
         btnDDL = QPushButton()
         self.leftLayout.addWidget(btnDDL)
         btnDDL.setFixedSize(81, 29)
@@ -1210,6 +1309,27 @@ class Talendar(QWidget):  # 主界面
 
 
         btnDDL.clicked.connect(self.showDDL)
+
+        self.btnCourse = QPushButton(u'课程')
+        # self.ckHomework = QCheckBox()
+        self.btnHomework = QPushButton(u'作业')
+        # self.ckConf = QCheckBox()
+        self.btnConf = QPushButton(u'活动/会议')
+
+        self.btnOther = QPushButton(u'其他')
+        self.btnCourse.clicked.connect(self.targetCourse)
+        self.btnHomework.clicked.connect(self.targetHomework)
+        self.btnConf.clicked.connect(self.targetConf)
+        self.btnOther.clicked.connect(self.targetOther)
+        # self.btnOther.clicked(self.targetOther)
+        self.leftLayout.insertWidget(4, self.btnOther)
+        self.leftLayout.insertWidget(4, self.btnConf)
+        self.leftLayout.insertWidget(4, self.btnHomework)
+        self.leftLayout.insertWidget(4, self.btnCourse)
+        self.btnHomework.hide()
+        self.btnConf.hide()
+        self.btnOther.hide()
+        self.btnCourse.hide()
         ##############updated###################
 
         self.leftLayout.addStretch(1)
@@ -1540,7 +1660,7 @@ class Talendar(QWidget):  # 主界面
             self.grid=self.MonthGrid()
             self.calendarLayout.addWidget(self.grid)
         self.updateDDL()
-        #twinkle([1,2,3])
+        #self.twinkle([4])
         #a = getcompletelist()
         #print 'all------'
         #print a
@@ -1556,6 +1676,7 @@ class Talendar(QWidget):  # 主界面
         rownum=self.rowNum
         templist=[]
         colorlist=[]
+        print nolist
         for i in range(colnum):
             for j in range(rownum):
                 tempWidget=self.grid.cellWidget(j,i)
@@ -1580,17 +1701,19 @@ class Talendar(QWidget):  # 主界面
         return templist,colorlist
 
     def twinkle_d(self,templist,colorlist):
+        #print templist, colorlist
         for i,item in enumerate(templist):
             item.setBackground(self.getColor(colorlist[i]))
 
     def twinkle(self,nolist):#闪烁调用接口，需要传入id的list，id为字符串格式。利用了self.nolist, self.templist和self.colorlist来传参，可以调整闪烁时间和闪烁次数
         self.nolist=nolist
+        #print nolist
         self.templist=[]
         self.colorlist=[]
         self.times=QTimer(self)
         self.ww=0
         self.times.timeout.connect(self.twinkle__)
-        self.times.start(100)#闪烁时间
+        self.times.start(50)#闪烁时间
 
     def twinkle__(self):
         if self.ww>15:#闪烁次数
@@ -1650,7 +1773,7 @@ class Talendar(QWidget):  # 主界面
             elif flag_==1:
                 flag=1
             for row in range(rowNum):
-                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1))
+                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1), self.targetTag)
                 comBox=QListWidget()
                 newItem=QListWidgetItem('')
                 newItem.setFont(QFont(FontType,FontSize))
@@ -1659,7 +1782,7 @@ class Talendar(QWidget):  # 主界面
                 comBox.addItem(newItem)
                 otherschedule=[]
                 for i,title in enumerate(scheduletitle):
-                    if i<2:
+                    if i<5:
                         if len(title)>18:
                             title=title[:18]+u'...'
                         newItem=QListWidgetItem(unicode(title))
@@ -1691,7 +1814,7 @@ class Talendar(QWidget):  # 主界面
         return grid
 
 
-    def getDayScheduleTitle(self, endDate):
+    def getDayScheduleTitle(self, endDate, targetTag = None):
         IDlist = []
         Namelist = []
         _list = []
@@ -1701,6 +1824,18 @@ class Talendar(QWidget):  # 主界面
             temp_list = temp[2].split('-')
             temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
             #print temp_endDate, endDate
+            temp_ID = temp[0]
+
+            #get_tag_list(targetTag)
+            #print a
+
+            if targetTag != None:
+                inThisTag = get_tag_list(targetTag)
+                idlist = []
+                for item in inThisTag:
+                    idlist.append(item.split()[0])
+                if temp_ID not in idlist:
+                    continue
             if temp_endDate == endDate:
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
@@ -1709,7 +1844,9 @@ class Talendar(QWidget):  # 主界面
         #print _list
         return _list
 
-    def getHourScheduleTitle(self, startDate):
+
+
+    def getHourScheduleTitle(self, startDate, targetTag = None):
         IDlist = []
         Namelist = []
         _list = []
@@ -1730,7 +1867,20 @@ class Talendar(QWidget):  # 主界面
             beginhour=int(temp_list1[3])
             #print temp_endDate
             #print endDate
-            print endhour,beginhour
+            #print endhour,beginhour
+            temp_ID = temp[0]
+
+            # get_tag_list(targetTag)
+            # print a
+
+            if targetTag != None:
+                inThisTag = get_tag_list(targetTag)
+                idlist = []
+                for item in inThisTag:
+                    idlist.append(item.split()[0])
+                if temp_ID not in idlist:
+                    continue
+
             if temp_endDate == startDate[:-2] and endhour<=int(startDate[-1]) and beginhour>=int(startDate[-1]) :
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
@@ -1758,6 +1908,7 @@ class Talendar(QWidget):  # 主界面
             IDs = IDs[0]
             showWindow = Show(IDs)
             if showWindow.exec_():
+                self.twinkle(showWindow.sonIDList)
                 self.refresh()
                 return
 
@@ -1814,7 +1965,7 @@ class Talendar(QWidget):  # 主界面
 
         for day in range(monthTime):            
             text=beginDay.strftime("%m-%d")
-            scheduleid,scheduletitle=self.getDayScheduleTitle(str(year)+'-'+str(month)+'-'+str(day+1))
+            scheduleid,scheduletitle=self.getDayScheduleTitle(str(year)+'-'+str(month)+'-'+str(day+1), self.targetTag)
             #print scheduleid, scheduletitle
             comBox = QListWidget() 
             newItem=QListWidgetItem(unicode(text))
