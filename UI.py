@@ -1001,8 +1001,8 @@ class Talendar(QWidget):  # 主界面
 
         #self.resize(695, 500)
         self.resize(880, 600)
-        #self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
-        self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
+        self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
+        #self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag='w'
         self.initGrid()
 
@@ -1660,7 +1660,11 @@ class Talendar(QWidget):  # 主界面
             self.grid=self.MonthGrid()
             self.calendarLayout.addWidget(self.grid)
         self.updateDDL()
+        #<<<<<<< HEAD
+        #twinkle([1,2,3])
+        #=======
         #self.twinkle([4])
+        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
         #a = getcompletelist()
         #print 'all------'
         #print a
@@ -1676,7 +1680,10 @@ class Talendar(QWidget):  # 主界面
         rownum=self.rowNum
         templist=[]
         colorlist=[]
-        print nolist
+        #<<<<<<< HEAD
+        #=======
+        print "nolist",nolist
+        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
         for i in range(colnum):
             for j in range(rownum):
                 tempWidget=self.grid.cellWidget(j,i)
@@ -1694,31 +1701,45 @@ class Talendar(QWidget):  # 主界面
                     #print numlist
                     for w,item in enumerate(numlist) :
                         #print item
-                        if  not item=='' and int(item) in nolist:
+                        if  not item=='' and str(item) in nolist:
                             items.setBackground(QColor(Qt.yellow))
                             templist.append(items)
                             colorlist.append(item)
+        self.templist=templist
+        self.colorlist=colorlist
+        #print templist
         return templist,colorlist
 
     def twinkle_d(self,templist,colorlist):
-        #print templist, colorlist
+        #<<<<<<< HEAD
+        #=======
+        #print "test",templist, colorlist
+        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
         for i,item in enumerate(templist):
             item.setBackground(self.getColor(colorlist[i]))
 
     def twinkle(self,nolist):#闪烁调用接口，需要传入id的list，id为字符串格式。利用了self.nolist, self.templist和self.colorlist来传参，可以调整闪烁时间和闪烁次数
         self.nolist=nolist
+        #<<<<<<< HEAD
+        #=======
         #print nolist
+        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
         self.templist=[]
         self.colorlist=[]
         self.times=QTimer(self)
         self.ww=0
         self.times.timeout.connect(self.twinkle__)
-        self.times.start(50)#闪烁时间
+        #<<<<<<< HEAD
+        self.times.start(100)#闪烁时间
+        #=======
+        #self.times.start(50)#闪烁时间
+        #self.twinkle__()
+        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
 
     def twinkle__(self):
-        if self.ww>15:#闪烁次数
+        if self.ww>16:#闪烁次数
             self.times.stop()
-        if self.ww%2==1:
+        if self.ww%2==0:
             self.templist,self.colorlist=self.twinkle_b()
         else:
             self.twinkle_d(self.templist,self.colorlist)
@@ -1773,7 +1794,11 @@ class Talendar(QWidget):  # 主界面
             elif flag_==1:
                 flag=1
             for row in range(rowNum):
+                #<<<<<<< HEAD
+                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1))
+                #=======
                 scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1), self.targetTag)
+                #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
                 comBox=QListWidget()
                 newItem=QListWidgetItem('')
                 newItem.setFont(QFont(FontType,FontSize))
@@ -1867,6 +1892,9 @@ class Talendar(QWidget):  # 主界面
             beginhour=int(temp_list1[3])
             #print temp_endDate
             #print endDate
+            #<<<<<<< HEAD
+            print endhour,beginhour
+            #=======
             #print endhour,beginhour
             temp_ID = temp[0]
 
@@ -1881,6 +1909,7 @@ class Talendar(QWidget):  # 主界面
                 if temp_ID not in idlist:
                     continue
 
+            #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
             if temp_endDate == startDate[:-2] and endhour<=int(startDate[-1]) and beginhour>=int(startDate[-1]) :
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
