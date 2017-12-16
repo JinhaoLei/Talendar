@@ -217,7 +217,9 @@ class WebLearningScraper(object):
 if __name__ == '__main__':
 	username=''
 	password=''  # TODO:change username and password
-
+	if username is None or password is None:
+        username = input("TsinghuaId:")
+        password = getpass.getpass("Password:")
 	print(json.dumps(WebLearningScraper(username, password).courses(),ensure_ascii=False,indent = 4))
 	print(json.dumps(GetTimetable(username, password).get_course_time(),ensure_ascii=False,indent = 4))
 
