@@ -29,6 +29,7 @@ def details(ID):
     lists = f.readlines()
     f.close()
     flag = False
+    _list = []
     for i in range(len(lists)):
         lists[i] = lists[i].replace('\n', '')
         temp_list = lists[i].split(' ')
@@ -36,26 +37,22 @@ def details(ID):
         #print temp_list[0], ID
         if ID == temp_list[0]:
             filename_list = temp_list[2].split('-')
-            filename = temp_list[0] + '$$'+filename_list[0]+'-'+filename_list[1]+'-'+filename_list[2]\
-                       +'$$'+filename_list[3]
+            filename = temp_list[0] + '$$'+filename_list[0]+'-'+filename_list[1]+'-'+filename_list[2] + '$$' + filename_list[3]
             flag = True
     if flag:
         path = 'data/list/' + filename
         notepath = 'data/note/' + ID
-        f = open(path, 'r')
-        f_notepath = open(notepath,'r')
-        note = f_notepath.read()
-        #print note
-        _list = f.readlines()
-        #print _list
-        #print len(_list)
-        for i in range(len(_list)):
-            _list[i] = _list[i].replace('\n', '')
-        _list.append(note)
-        #print _list
+        if os.path.isfile(path):
+            f = open(path, 'r')
+            f_notepath = open(notepath,'r')
+            note = f_notepath.read()
+            _list = f.readlines()
+            for i in range(len(_list)):
+                _list[i] = _list[i].replace('\n', '')
+            _list.append(note)
         return _list
     else:
-        return None
+        return _list
 
 def getlist():
     f = open(r"data/root/0_time_routine_ls", 'r')
@@ -99,86 +96,101 @@ def tranBoolList(aList):
     a = a[1:-1].split(', ')
     return a
 def remove(ID):
-    #f_test = open("test",'w')
     detail = details(ID)
-    #f_test.write('detail:\n')
-    #f_test.writelines(detail)
     tags = detail[8].split(',')
     for i in range(5):
-        #print chardet.detect(tags[i])
         tags[i] = tags[i].decode('utf-8')
-        #print tags[i]
-    k=-1
+    k = -1
     _tag_list = []
     for i in range(5):
         if not tags[i] == '':
             tag_path = u'data/root/'.encode('utf-8') + tags[i].encode('utf-8')
-            #f_test.write('\n'+tag_path+'\n')
-            f = open(tag_path.decode('utf-8').encode('gbk'),'r')
+            f = open(tag_path.decode('utf-8').encode('gbk'), 'r')
             tag_list = f.readlines()
-            #f_test.write('tag_list\n')
-            #f_test.writelines(tag_lists)
             f.close()
-            for j in range(len(tag_list)):
+            for j in tag_list[::-1]:
                 _tag_list.append(tag_list[j].replace('\n',''))
                 tag_temp = _tag_list[j].split(' ')
-                #f_test.write('\ntag_temp:\n')
-                #f_test.writelines(tag_temp)
                 if ID == tag_temp[0]:
-                    k = j
-                    #f_test.write('\nk:\n')
-                    break
-            del tag_list[k]
+                    del tag_list[k]
             if len(tag_list):
-                #f_test.write('\ntag_list:\n')
-                #f_test.writelines(tag_list)
-                f = open(tag_path.decode('utf-8').encode('gbk'),'w')
-                #temp = f.read()
+                f = open(tag_path.decode('utf-8').encode('gbk'), 'w')
                 print tag_list
                 f.writelines(tag_list)
                 f.close()
             else:
-                f = open(r"data/root/tags",'r')
+                f = open(r"data/root/tags", 'r')
                 os.remove(tag_path.decode('utf-8').encode('gbk'))
                 tag_lists = f.readlines()
                 f.close()
                 for h in range(len(tag_lists)):
-                    if tags[i] == tag_lists[h].replace('\n','').decode('utf-8'):
+                    if tags[i] == tag_lists[h].replace('\n', '').decode('utf-8'):
                         del tag_lists[h]
-                        f = open(r"data/root/tags",'w')
+                        f = open(r"data/root/tags", 'w')
                         f.writelines(tag_lists)
-                        break
     time_list = detail[4].split(' ')
     filename = ID +'$$' +time_list[0]+'$$'+time_list[1]
     f = open(r"data/root/0_time_routine_ls", 'r')
     lists = f.readlines()
     f.close()
-    k=-1
     _lists = []
-    for i in range(len(lists)):
+    lenth = len(lists)
+    for i in range(0, len(lists))[::-1]:
         _lists.append(lists[i].replace('\n', ''))
-        temp_list = _lists[i].split(' ')
+        temp_list = _lists[lenth-1-i].split(' ')
         if ID == temp_list[0]:
-            k = i
-    path = 'data/list/'+filename
-    notepath = 'data/note/' +ID
-    os.remove(path)
+            path = 'data/list/' + filename
+            os.remove(path)
+            del lists[i]
+    notepath = 'data/note/' + ID
     os.remove(notepath)
-    #print lists
-    #print _lists
-    del lists[k]
+
     f = open(r"data/root/0_time_routine_ls", 'w')
     f.writelines(lists)
     f.close()
+
+    if detail[15] == '0':
+        sonlist = detail[16].split(',')
+        if sonlist[0] != ID:
+            parent_list = details(sonlist[0])
+            if not parent_list == []:
+                del parent_list[-1]
+                pa_sonlist = parent_list[-1].split(',')
+                del parent_list[-1]
+                for i in range(0, len(pa_sonlist))[::-1]:
+                    if pa_sonlist[i] == ID:
+                        del pa_sonlist[i]
+                        pa_numson = int(parent_list[-1])-1
+                        parent_list[-1] = str(pa_numson)
+                pa_time = parent_list[4].split(' ')
+                pa_fil_name = parent_list[0] + '$$' + pa_time[0] + '$$' + pa_time[1]
+                pa_fil_name = 'data/list/' + pa_fil_name
+                parent_f = open(pa_fil_name, 'w')
+                for i in range(len(parent_list)):
+                    parent_f.write(parent_list[i]+'\n')
+                for i in range(len(pa_sonlist)-1):
+                    parent_f.write(pa_sonlist[i] + ',')
+                parent_f.close()
+    else:
+        son_list = detail[16].split(',')
+        del son_list[-1]
+        del son_list[0]
+        for i in range(len(son_list)):
+            remove(son_list[i])
+    #print lists
+    #print _lists
+    #del lists[k]
     return
 
 def filter(s):
     date = s.split()
     month = date[-3].replace('月', '')
     weekdays = {'周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7}
+    months = {'一': 1,'二': 2,'三': 3,'四': 4,'五': 5,'六': 6,'七': 7,'八': 8,'九': 9,'十': 10,'十一': 11,'十二': 12}
     weekday = weekdays[date[0]]
-    date = date[-1] + '-' + month + '-' + date[-2]
-    date_weekday = date + '-' + str(weekday)
+    month = months[month]
+    date = date[-1] + '-' + str(month) + '-' + date[-2]
+    #date_weekday = date + '-' + str(weekday)
     # print date
     # print date_weekday
     return date
@@ -478,19 +490,20 @@ class Add(QDialog):  # 新建事项窗口
             first_line = lines[0]
             last_line = lines[-1]
             list1 = first_line.split(' ')
+            list3 = last_line.split(',')
             num_son = int(list1[0])
-            parents_number = int(list1[1])
+            parents_number = int(list3[0])
             if num_son == 0:
                 sonNum = parents_number + 1
             else:
-                list2 = last_line.split(',')
-                print list2
-                elder = int(list2[-2])
+                #list2 = last_line.split(',')
+                print list3
+                elder = int(list3[-2])
                 sonNum = elder + 1
             f_sonIDlist.close()
             f_sonIDlist = open(fname_sonIDlist, 'w')
-            f_sonIDlist.write(str(num_son + 1) + ' ')
-            f_sonIDlist.write(str(parents_number) + '\n')
+            f_sonIDlist.write(str(num_son + 1) + '\n')
+            f_sonIDlist.write(str(parents_number) + ',')
             for i in range(parents_number + 1, sonNum + 1):
                 f_sonIDlist.write(str(i) + ',')
                 print i
@@ -545,7 +558,7 @@ class Add(QDialog):  # 新建事项窗口
                                          + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
                     f_special_tags.close()
             f_tags.close()
-            repeatInfo = addWindow.repeatParameters
+            #repeatInfo = addWindow.repeatParameters
             # sonID = self.sonID  # 子事件没有子事件
             # self.sonID += 1
             # self.sonIDList.append(self.sonID)  # 给父级事件赋子事件
@@ -573,7 +586,7 @@ class Add(QDialog):  # 新建事项窗口
             f_repeat = open(r'data/list/new_son', 'r')
             repeat_list = f_repeat.readlines()
             f.writelines(repeat_list)
-            f.write(str(0) + ' ' + str(sonNum) + '\n')
+            f.write(str(0) + '\n' + str(parents_number) + ',')
             f_repeat.close()
             os.remove(r'data/list/new_son')
             f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
@@ -1001,8 +1014,8 @@ class Talendar(QWidget):  # 主界面
 
         #self.resize(695, 500)
         self.resize(880, 600)
-        self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
-        #self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
+        #self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
+        self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag='w'
         self.initGrid()
 
@@ -1520,8 +1533,8 @@ class Talendar(QWidget):  # 主界面
         #    sonIDList.append(sonIDList[-1] + 1)
         # elif last_line[1] != '':
         #    sonIDList.append(last_num + 1)
-        f_sonIDlist.write('0' + ' ')
-        f_sonIDlist.write(str(last_num + 1) + '\n')
+        f_sonIDlist.write('0' + '\n')
+        f_sonIDlist.write(str(last_num + 1) + ',')
         f_sonIDlist.close()
         f = open(r"data/list/new", 'w')
         list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
@@ -1675,9 +1688,9 @@ class Talendar(QWidget):  # 主界面
 
     def twinkle_b(self):
         import time
-        nolist=self.nolist
-        colnum=7
-        rownum=self.rowNum
+        nolist = self.nolist
+        colnum = 7
+        rownum = self.rowNum
         templist=[]
         colorlist=[]
         #<<<<<<< HEAD
