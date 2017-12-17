@@ -475,11 +475,11 @@ class Add(QDialog):  # 新建事项窗口
         self.tagGroup[self.numOfClicked - 1].setEnabled(True)
 
     def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
-        f = open(r"data/list/new_son", 'w')
-        list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
-                '[False, False, False, False, False, False, False]', '\n']
-        f.writelines(list)
-        f.close()
+        #f = open(r"data/list/new_son", 'w')
+        #list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
+        #        '[False, False, False, False, False, False, False]', '\n']
+        #f.writelines(list)
+        #f.close()
         addWindow = Add()
         # addWindow.buttonSon.hide()
         addWindow.buttonSon.setEnabled(False)
