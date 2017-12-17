@@ -436,7 +436,7 @@ class Add(QDialog):  # 新建事项窗口
             if endTimes == '': endTimes = '-1'
             endDate = repeatWindow.editEnd.text()
             if endDate == '':
-                endDate = '1000-0-0'
+                endDate = '1000-1-1'
             else:
                 endDate = filter(str(endDate))
             checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
@@ -444,18 +444,18 @@ class Add(QDialog):  # 新建事项窗口
                                      checkBoxGroup]  # 所有重复窗口里面设置的参数
             #print checkBoxGroup
             #print self.repeatParameters
-            if os.path.isfile(r"data/list/new_son"):
-                f = open(r'data/list/new_son', 'w')
-            else:
-                f = open(r"data/list/new", 'w')
+            #if os.path.isfile(r"data/list/new_son"):
+            #    f = open(r'data/list/new_son', 'w')
+            #else:
+            #    f = open(r"data/list/new", 'w')
             #print type(self.repeatParameters)
-            f.write(str(comboUnit) + '\n')
-            f.write(str(frequency) + '\n')
-            f.write(str(radioSelected) + '\n')
-            f.write(str(endTimes) + '\n')
-            f.write(str(endDate) + '\n')
-            f.write(str(checkBoxGroup) + '\n')
-            f.close()
+            #f.write(str(comboUnit) + '\n')
+            #f.write(str(frequency) + '\n')
+            #f.write(str(radioSelected) + '\n')
+            #f.write(str(endTimes) + '\n')
+            #f.write(str(endDate) + '\n')
+            #f.write(str(checkBoxGroup) + '\n')
+            #f.close()
 
 
     def diffUnit(self, index):
@@ -476,7 +476,7 @@ class Add(QDialog):  # 新建事项窗口
 
     def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
         #f = open(r"data/list/new_son", 'w')
-        #list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
+        #list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
         #        '[False, False, False, False, False, False, False]', '\n']
         #f.writelines(list)
         #f.close()
@@ -514,7 +514,7 @@ class Add(QDialog):  # 新建事项窗口
             if location == '': location = 'None'
             startDate = addWindow.editStartDate.text()
             if startDate == '':
-                startDate = '1000-0-0'
+                startDate = '1000-1-1'
             else:
                 startDate = filter(str(startDate))
             startHour = addWindow.editStartHour.text()
@@ -523,7 +523,7 @@ class Add(QDialog):  # 新建事项窗口
             if startMinute == '': startMinute = '61'
             endDate = addWindow.editEndDate.text()
             if endDate == '':
-                endDate = '1000-0-0'
+                endDate = '1000-1-1'
             else:
                 endDate = filter(str(endDate))
             endHour = addWindow.editEndHour.text()
@@ -558,7 +558,7 @@ class Add(QDialog):  # 新建事项窗口
                                          + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
                     f_special_tags.close()
             f_tags.close()
-            #repeatInfo = addWindow.repeatParameters
+            repeatInfo = addWindow.repeatParameters
             # sonID = self.sonID  # 子事件没有子事件
             # self.sonID += 1
             # self.sonIDList.append(self.sonID)  # 给父级事件赋子事件
@@ -583,12 +583,22 @@ class Add(QDialog):  # 新建事项窗口
             for i in range(5):
                 f.write(str(tags[i]) + ',')
             f.write('\n')
-            f_repeat = open(r'data/list/new_son', 'r')
-            repeat_list = f_repeat.readlines()
-            f.writelines(repeat_list)
+            #f_repeat = open(r'data/list/new_son', 'r')
+            #repeat_list = f_repeat.readlines()
+            #f.writelines(repeat_list)
+            if repeatInfo == []:
+                f.write('-1' + '\n')
+                f.write('-1' + '\n')
+                f.write('[False, False, False]' + '\n')
+                f.write('-1' + '\n')
+                f.write('1000-1-1' + '\n')
+                f.write('[False, False, False, False, False, False, False]' + '\n')
+            else:
+                for i in range(6):
+                    f.write(str(repeatInfo[i]) + '\n')
             f.write(str(0) + '\n' + str(parents_number) + ',')
-            f_repeat.close()
-            os.remove(r'data/list/new_son')
+            #f_repeat.close()
+            #os.remove(r'data/list/new_son')
             f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
             f_time_routine.write(str(sonNum) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
                                  + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
@@ -910,7 +920,7 @@ class Show(Add):
             repeatWindow.radioEnd.setChecked(True)
         if self.repeatInfo[3] != '-1':
             repeatWindow.editTimes.setText(self.repeatInfo[3])
-        if self.repeatInfo[4] != '1000-0-0':
+        if self.repeatInfo[4] != '1000-1-1':
             repeatWindow.editEnd.setText(self.repeatInfo[4])
         checkGroup = tranBoolList(self.repeatInfo[5])
         for i in range(7):
@@ -1101,7 +1111,7 @@ class Talendar(QWidget):  # 主界面
             f_sonIDlist.write(str(last_num + 1) + '\n')
             f_sonIDlist.close()
             f = open(r"data/list/new", 'w')
-            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
+            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
                     '[False, False, False, False, False, False, False]', '\n']
             f.writelines(list)
             f.close()
@@ -1536,11 +1546,11 @@ class Talendar(QWidget):  # 主界面
         f_sonIDlist.write('0' + '\n')
         f_sonIDlist.write(str(last_num + 1) + ',')
         f_sonIDlist.close()
-        f = open(r"data/list/new", 'w')
-        list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
-                '[False, False, False, False, False, False, False]', '\n']
-        f.writelines(list)
-        f.close()
+        # f = open(r"data/list/new", 'w')
+        # list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
+        #        '[False, False, False, False, False, False, False]', '\n']
+        # f.writelines(list)
+        # f.close()
         addWindow = Add()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
             name = addWindow.editTitle.text()
@@ -1549,7 +1559,7 @@ class Talendar(QWidget):  # 主界面
             if location == '': location = 'None'
             startDate = addWindow.editStartDate.text()
             if startDate == '':
-                startDate = '1000-0-0'
+                startDate = '1000-1-1'
             else:
                 startDate = filter(str(startDate))
             startHour = addWindow.editStartHour.text()
@@ -1558,7 +1568,7 @@ class Talendar(QWidget):  # 主界面
             if startMinute == '': startMinute = '61'
             endDate = addWindow.editEndDate.text()
             if endDate == '':
-                endDate = '1000-0-0'
+                endDate = '1000-1-1'
             else:
                 endDate = filter(str(endDate))
             endHour = addWindow.editEndHour.text()
@@ -1593,7 +1603,8 @@ class Talendar(QWidget):  # 主界面
                                          + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
                     f_special_tags.close()
             f_tags.close()
-            # repeatInfo = addWindow.repeatParameters
+            repeatInfo = addWindow.repeatParameters
+            print repeatInfo
             # sonIDList = addWindow.sonIDList
             # 给父级事件赋子事件
             note_path = 'data/note/' + str(last_num + 1)
@@ -1613,17 +1624,26 @@ class Talendar(QWidget):  # 主界面
             for i in range(5):
                 f.write(str(tags[i]) + ',')
             f.write('\n')
-            f_repeat = open(r'data/list/new', 'r')
-            repeat_list = f_repeat.readlines()
-            f_repeat.close()
-            f.writelines(repeat_list)
+            #f_repeat = open(r'data/list/new', 'r')
+            #repeat_list = f_repeat.readlines()
+            #f_repeat.close()
+            if repeatInfo == []:
+                f.write('-1' + '\n')
+                f.write('-1' + '\n')
+                f.write('[False, False, False]' + '\n')
+                f.write('-1' + '\n')
+                f.write('1000-1-1' + '\n')
+                f.write('[False, False, False, False, False, False, False]' + '\n')
+            else:
+                for i in range(6):
+                    f.write(str(repeatInfo[i]) + '\n')
             f_sonIDlist = open(fname_sonIDlist, 'r')
             son_list = f_sonIDlist.readlines()
             # print son_list
             f.writelines(son_list)
             f_sonIDlist.close()
             os.remove(fname_sonIDlist)
-            os.remove(r'data/list/new')
+            #os.remove(r'data/list/new')
             f.close()
             # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
             # time_routine_list = f_time_routine.readlines()
