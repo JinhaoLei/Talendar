@@ -1008,6 +1008,42 @@ class multiItem(QDialog):
             self.layout.addWidget(btnNames[i])
 
 
+class trayIcon(QSystemTrayIcon):
+    def __init__(self,parent=None):
+        super(trayIcon, self).__init__(parent)
+        self.initicon()
+
+
+
+    def initicon(self):         #托盘初始化
+        #self.tray = QSystemTrayIcon() #创建系统托盘对象
+        self.icon = QIcon("./pic/logo-square-64.png")
+        self.show()
+
+        self.setIcon(self.icon)  #设置系统托盘图标
+
+
+        self.activated.connect(self.iconClied) #设置托盘点击事件处理函数
+        self.tray_menu = QMenu(QApplication.desktop()) #创建菜单
+        pw = self.parent()
+        self.RestoreAction = QAction(u'还原 ', self, triggered= pw.show) #添加一级菜单动作选项(还原主窗口)
+        self.QuitAction = QAction(u'退出 ', self, triggered=qApp.quit) #添加一级菜单动作选项(退出程序)
+        self.tray_menu.addAction(self.RestoreAction) #为菜单添加动作
+        self.tray_menu.addAction(self.QuitAction)
+        self.setContextMenu(self.tray_menu) #设置系统托盘菜单
+
+    def iconClied(self, reason):
+        "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"
+        if reason == 2 or reason == 3:
+            pw = self.parent()
+
+            pw.show()
+
+        if reason ==1 :
+            self.tray_menu.show()
+
+
+
 class Talendar(QWidget):  # 主界面
 
     def __init__(self):
@@ -1020,6 +1056,9 @@ class Talendar(QWidget):  # 主界面
         self.date=datetime.now()
         self.rowNum=24
         self.filterFlag = 0
+        self.ti = trayIcon(self)
+        self.ti.show()
+
         #self.setWindowFlags(Qt.CustomizeWindowHint)
 
         #self.resize(695, 500)
@@ -1028,6 +1067,8 @@ class Talendar(QWidget):  # 主界面
         self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag='w'
         self.initGrid()
+        self.icon = QIcon("./pic/logo-square-64.png")
+        self.setWindowIcon(self.icon)
 
         pal = QPalette()
 
@@ -1039,6 +1080,17 @@ class Talendar(QWidget):  # 主界面
 
         self.timer.timeout.connect(self.updateDDL)
         self.startCount()
+
+
+    def closeEvent(self, event):
+        reply =QMessageBox.question(self, u'警告', u'是否最小化到托盘？',
+                                           QMessageBox.Yes, QMessageBox.No)
+        if reply ==QMessageBox.Yes:
+            event.ignore()
+            self.hide()
+        else:
+            event.accept()
+
 
 
     def startCount(self):
@@ -1203,7 +1255,8 @@ class Talendar(QWidget):  # 主界面
         self.initLeftGrid()  # 初始化左侧菜单栏
         self.initCalendarGrid()  # 初始化右侧日历表格界面
         self.initTopGrid()
-        self.initMainGrid()  # 构建主布局
+        self.initMainGrid() # 构建主布局
+        #self.initTuoPan()
 
         #self.addNewEvent(3,2,1,u'test')
 	
