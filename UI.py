@@ -1924,8 +1924,9 @@ class Talendar(QWidget):  # 主界面
 
         return grid
 
-
-    def getDayScheduleTitle(self, endDate, targetTag = None):
+    def getDayScheduleTitle(self, endDate, targetTag=None):
+        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
+        endDate_list = endDate.split('-')
         IDlist = []
         Namelist = []
         _list = []
@@ -1934,12 +1935,10 @@ class Talendar(QWidget):  # 主界面
             temp = lists[i].split(' ')
             temp_list = temp[2].split('-')
             temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
-            #print temp_endDate, endDate
+            # print temp_endDate, endDate
             temp_ID = temp[0]
-
-            #get_tag_list(targetTag)
-            #print a
-
+            # get_tag_list(targetTag)
+            # print a
             if targetTag != None:
                 inThisTag = get_tag_list(targetTag)
                 idlist = []
@@ -1950,38 +1949,156 @@ class Talendar(QWidget):  # 主界面
             if temp_endDate == endDate:
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
+            else:
+                filename = temp_ID + '$$' + temp_endDate + '$$' + temp_list[3]
+                path = 'data/list/' + filename
+                f = open(path, 'r')
+                detail = f.readlines()
+                __list = detail[3].split(' ')  #####
+                startlist = __list[0].split('-')
+                startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
+                TstartDate = datetime.strptime(startDate, '%Y-%m-%d')
+                repeattype = detail[9].replace('\n', '')
+                # 0:天 1:周 2:月 3:年
+                repeatfren = int(detail[10].replace('\n', ''))
+                endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(',')
+                endtype = -1  #######
+                for j in range(len(endtypelist)):
+                    if endtypelist[j] == 'True':
+                        endtype = j
+                        # 0:永不 1;重复次数 2：结束日期
+                repeattimes = int(detail[12].replace('\n', ''))
+                print detail[13].replace('\n', '')
+                enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
+                repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
+                if TendDate >= TstartDate:
+                    if repeattype == '0':
+                        if endtype == 0:  # 按日重复，永不停止
+                            delta = TendDate - TstartDate
+                            if delta.days % repeatfren == 0:
+                                IDlist.append(temp[0])
+                                Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照日重复，间隔一定的天数
+                            due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
+                            delta = TendDate - TstartDate
+                            if due_date > TendDate:
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 2:  # 按天重复到某个日期
+                            delta = TendDate - TstartDate
+                            if enddate >= TendDate:
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                    elif repeattype == '1':
+                        if endtype == 0:  # 按周重复，永不停止
+                            weekday = TendDate.weekday()
+                            if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                delta = TendDate - TstartDate
+                                if delta.days % (7 * repeatfren) == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照周重复一定的次数
+                            due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
+                            if due_date > TendDate:
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 2:  # 按周重复到某个日期
+                            if enddate >= TendDate:
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                    elif repeattype == '2':
+                        if endtype == 0:  # 按月重复，永不停止
+                            delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                startlist[1])
+                            if delta % repeatfren == 0:
+                                if endDate_list[2] == startlist[2]:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照月重复一定的次数
+                            if endDate_list[2] == startlist[2]:
+                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                    startlist[1])
+                                if delta % repeatfren == 0:
+                                    if delta / repeatfren < repeattimes:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 2:  # 按月重复到某个日期
+                            if enddate >= TendDate:
+                                if endDate_list[2] == startlist[2]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                        endDate_list[1]) - int(
+                                        startlist[1])
+                                    if delta % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                    elif repeattype == '3':
+                        if endtype == 0:  # 按年重复，永不停止
+                            delta = (int(endDate_list[0]) - int(startlist[0]))
+                            if delta % repeatfren:
+                                if endDate_list[2] == startlist[2]:
+                                    if endDate_list[1] == startlist[1]:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照年重复一定的次数
+                            if endDate_list[2] == startlist[2]:
+                                if endDate_list[1] == startlist[1]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0]))
+                                    if delta % repeatfren == 0:
+                                        if delta / repeatfren < repeattimes:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif endtype == 2:  # 按月重复到某个日期
+                            if enddate >= TendDate:
+                                delta = (int(endDate_list[0]) - int(startlist[0]))
+                                if delta % repeatfren:
+                                    if endDate_list[2] == startlist[2]:
+                                        if endDate_list[1] == startlist[1]:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
         _list.append(IDlist)
         _list.append(Namelist)
-        #print _list
+        # print _list
         return _list
 
-
-
-    def getHourScheduleTitle(self, startDate, targetTag = None):
+    def getHourScheduleTitle(self, startDate, targetTag=None):
+        endDate_list = startDate.split('-')
+        endDate = endDate_list[0] + '-' + endDate_list[1] + '-' + endDate_list[2]
+        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
         IDlist = []
         Namelist = []
         _list = []
         lists = getlist()
-        #print endDate
+        # print endDate
         for i in range(len(lists)):
             temp = lists[i].split(' ')
-            #print temp
-            temp_list = temp[1].split('-')
-            temp_list1= temp[2].split('-')
-            if len(temp_list[2]) == 1:
+            # print temp
+            temp_list = temp[1].split('-')  # 开始时间
+            temp_list1 = temp[2].split('-')  # 结束时间
+            temp_endDate1 = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
+            if len(temp_list[2]) == 1:  # 如果只有一个字符加0
                 temp_list[2] = '0' + temp_list[2]
-            if len(temp_list1[2])==1:
-                temp_list1[2]='0'+temp_list1[2]
-            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2] 
-            endhour=int(temp_list[3])
-            temp_beginDate=temp_list1[0]+'-'+temp_list1[1]+'-'+temp_list1[2]
-            beginhour=int(temp_list1[3])
-            #print temp_endDate
-            #print endDate
-            #<<<<<<< HEAD
-            print endhour,beginhour
-            #=======
-            #print endhour,beginhour
+            if len(temp_list1[2]) == 1:
+                temp_list1[2] = '0' + temp_list1[2]
+            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
+            endhour = int(temp_list[3])
+            # temp_beginDate = temp_list1[0] + '-' + temp_list1[1] + '-' + temp_list1[2]
+            beginhour = int(temp_list1[3])
+            # print temp_endDate
+            # print endDate
+            # <<<<<<< HEAD
+            # print endhour, beginhour
+            # =======
+            # print endhour,beginhour
             temp_ID = temp[0]
 
             # get_tag_list(targetTag)
@@ -1995,10 +2112,129 @@ class Talendar(QWidget):  # 主界面
                 if temp_ID not in idlist:
                     continue
 
-            #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-            if temp_endDate == startDate[:-2] and endhour<=int(startDate[-1]) and beginhour>=int(startDate[-1]) :
-                IDlist.append(temp[0])
-                Namelist.append(temp[3])
+            # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+            if endhour <= int(startDate[-1]) and beginhour >= int(startDate[-1]):
+                if temp_endDate == endDate:
+                    IDlist.append(temp[0])
+                    Namelist.append(temp[3])
+                else:
+                    filename = temp_ID + '$$' + temp_endDate1 + '$$' + temp_list1[3]
+                    path = 'data/list/' + filename
+                    f = open(path, 'r')
+                    detail = f.readlines()
+                    startlist = detail[3].split('-')
+                    __list = detail[3].split(' ')  #####
+                    startlist = __list[0].split('-')
+                    _startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
+                    TstartDate = datetime.strptime(_startDate, '%Y-%m-%d')
+                    repeattype = detail[9].replace('\n', '')
+                    # 0:天 1:周 2:月 3:年
+                    repeatfren = int(detail[10].replace('\n', ''))
+                    endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(
+                        ',')
+                    endtype = -1
+                    for j in range(len(endtypelist)):
+                        if endtypelist[j] == 'True':
+                            endtype = j
+                            # 0:永不 1;重复次数 2：结束日期
+                    repeattimes = int(detail[12].replace('\n', ''))
+                    enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
+                    repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
+                    if TendDate >= TstartDate:
+                        if repeattype == '0':
+                            if endtype == 0:  # 按日重复，永不停止
+                                delta = TendDate - TstartDate
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照日重复，间隔一定的天数
+                                due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
+                                delta = TendDate - TstartDate
+                                if due_date > TendDate:
+                                    if delta.days % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 2:  # 按天重复到某个日期
+                                delta = TendDate - TstartDate
+                                if enddate >= TendDate:
+                                    if delta.days % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif repeattype == '1':
+                            if endtype == 0:  # 按周重复，永不停止
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照周重复一定的次数
+                                due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
+                                if due_date > TendDate:
+                                    weekday = TendDate.weekday()
+                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                        delta = TendDate - TstartDate
+                                        if delta.days % (7 * repeatfren) == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 2:  # 按周重复到某个日期
+                                if enddate >= TendDate:
+                                    weekday = TendDate.weekday()
+                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                        delta = TendDate - TstartDate
+                                        if delta.days % (7 * repeatfren) == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif repeattype == '2':
+                            if endtype == 0:  # 按月重复，永不停止
+                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                    startlist[1])
+                                if delta % repeatfren == 0:
+                                    if endDate_list[2] == startlist[2]:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照月重复一定的次数
+                                if endDate_list[2] == startlist[2]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                        endDate_list[1]) - int(
+                                        startlist[1])
+                                    if delta % repeatfren == 0:
+                                        if delta / repeatfren < repeattimes:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 2:  # 按月重复到某个日期
+                                if enddate >= TendDate:
+                                    if endDate_list[2] == startlist[2]:
+                                        delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                            endDate_list[1]) - int(
+                                            startlist[1])
+                                        if delta % repeatfren == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif repeattype == '3':
+                            if endtype == 0:  # 按年重复，永不停止
+                                delta = (int(endDate_list[0]) - int(startlist[0]))
+                                if delta % repeatfren:
+                                    if endDate_list[2] == startlist[2]:
+                                        if endDate_list[1] == startlist[1]:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照年重复一定的次数
+                                if endDate_list[2] == startlist[2]:
+                                    if endDate_list[1] == startlist[1]:
+                                        delta = (int(endDate_list[0]) - int(startlist[0]))
+                                        if delta % repeatfren == 0:
+                                            if delta / repeatfren < repeattimes:
+                                                IDlist.append(temp[0])
+                                                Namelist.append(temp[3])
+                            elif endtype == 2:  # 按月重复到某个日期
+                                if enddate >= TendDate:
+                                    delta = (int(endDate_list[0]) - int(startlist[0]))
+                                    if delta % repeatfren:
+                                        if endDate_list[2] == startlist[2]:
+                                            if endDate_list[1] == startlist[1]:
+                                                IDlist.append(temp[0])
+                                                Namelist.append(temp[3])
         _list.append(IDlist)
         _list.append(Namelist)
         return _list
