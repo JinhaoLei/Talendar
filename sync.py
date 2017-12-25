@@ -242,7 +242,7 @@ def main(username, password):
 		#info = json.dumps(info ,ensure_ascii=False,indent = 4)
 		return info, homework
 	except:
-		return '!!!'
+		return '!!!', '!!!'
 	#except:
 	#	return '!!!'
 	

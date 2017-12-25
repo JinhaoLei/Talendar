@@ -1618,7 +1618,9 @@ class UpdateWindow(QDialog):
             self.acceptDrops()
         else:
             info, homework = sync.main(username, password)
-            #print homework
+            info.extend(homework)
+            #print len(info)
+            #print len(homework)
             if info == '!!!':
                 warn = Warn('用户名或密码错误')
                 if warn.exec_():
@@ -1628,7 +1630,8 @@ class UpdateWindow(QDialog):
                 f.write(username + '\t' + password + '\t' + email)
                 f.close()
             #self.info = info
-            self.info = homework
+            self.info = info
+
         self.accept()
 
 
@@ -1927,8 +1930,10 @@ class Talendar(QWidget):  # 主界面
         updatewindow = UpdateWindow()
         if updatewindow.exec_():
             info = updatewindow.info
+            print info
             print len(info)
             for item in info:
+                #print item
                 fname = "data/root/0_time_routine_ls"
                 fname_sonIDlist = "data/list/sonIDlist"
                 f_sonIDlist = open(fname_sonIDlist, 'w')
