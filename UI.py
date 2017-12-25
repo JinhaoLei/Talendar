@@ -316,7 +316,22 @@ def save(addWindow, last_num, fname_sonIDlist):
     # print repeatInfo
     f_time_routine.close()
 
-
+def saveRepeat(repeatWindow, addWindow):
+    comboUnit = repeatWindow.comboUnit.currentIndex()
+    frequency = repeatWindow.editFre.text()
+    if frequency == '': frequency = '-1'
+    radioSelected = [repeatWindow.radioNever.isChecked(), repeatWindow.radioTimes.isChecked(),
+                     repeatWindow.radioEnd.isChecked()]
+    endTimes = repeatWindow.editTimes.text()
+    if endTimes == '': endTimes = '-1'
+    endDate = repeatWindow.editEnd.text()
+    if endDate == '':
+        endDate = '1000-1-1'
+    else:
+        endDate = filter(str(endDate))
+    checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
+    addWindow.repeatParameters = [comboUnit, unicode(frequency), radioSelected, unicode(endTimes), unicode(endDate),
+                             checkBoxGroup]  # 所有重复窗口里面设置的参数
 def filter(s):
     date = s.split()
     print date
@@ -682,21 +697,7 @@ class Add(QDialog):  # 新建事项窗口
         repeatWindow = RepeatWindow(self.weekday)
         self.repeatParameters = []
         if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
-            comboUnit = repeatWindow.comboUnit.currentIndex()
-            frequency = repeatWindow.editFre.text()
-            if frequency == '': frequency = '-1'
-            radioSelected = [repeatWindow.radioNever.isChecked(), repeatWindow.radioTimes.isChecked(),
-                             repeatWindow.radioEnd.isChecked()]
-            endTimes = repeatWindow.editTimes.text()
-            if endTimes == '': endTimes = '-1'
-            endDate = repeatWindow.editEnd.text()
-            if endDate == '':
-                endDate = '1000-1-1'
-            else:
-                endDate = filter(str(endDate))
-            checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
-            self.repeatParameters = [comboUnit, unicode(frequency), radioSelected, unicode(endTimes), unicode(endDate),
-                                     checkBoxGroup]  # 所有重复窗口里面设置的参数
+            saveRepeat(repeatWindow, self)
             # print checkBoxGroup
             # print self.repeatParameters
             # if os.path.isfile(r"data/list/new_son"):
@@ -1361,6 +1362,7 @@ class Show(Add):
                 repeatWindow.checkBoxGroup[i].setChecked(True)
 
         if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
+            saveRepeat(repeatWindow, self)
             return
 
 
