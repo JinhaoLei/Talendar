@@ -1617,8 +1617,8 @@ class UpdateWindow(QDialog):
                 return
             self.acceptDrops()
         else:
-            info = sync.main(username, password)
-            print info
+            info, homework = sync.main(username, password)
+            #print homework
             if info == '!!!':
                 warn = Warn('用户名或密码错误')
                 if warn.exec_():
@@ -1627,7 +1627,8 @@ class UpdateWindow(QDialog):
                 f = open('./data/user.csv', 'w')
                 f.write(username + '\t' + password + '\t' + email)
                 f.close()
-            self.info = info
+            #self.info = info
+            self.info = homework
         self.accept()
 
 
@@ -2977,6 +2978,7 @@ class Talendar(QWidget):  # 主界面
                 if i < 3:
                     if len(title) > 18:
                         title = title[:18] + '...'
+                    print title
                     newItem = QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType, FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))

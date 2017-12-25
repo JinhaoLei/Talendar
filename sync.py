@@ -15,6 +15,12 @@ sys.setdefaultencoding('utf-8')
 
 logging.basicConfig(level=logging.INFO)
 
+def filter(s):
+	date = '-'.join([str(int(s.split()[0].split('-')[i])) for i in range(3)])
+	hour = str(int(s.split()[1].split(':')[0]))
+	minute = str(int(s.split()[1].split(':')[1]))
+	return date, hour, minute
+
 class GetTimetable(object):
 	def __init__(self, username, password):
 		self.session = requests.Session()
@@ -100,13 +106,9 @@ class GetTimetable(object):
 					#course_time_start = time_flag + start_time[records['skjc'].encode("utf-8")]
 					#course_time_end = time_flag + end_time[records['skjc'].encode("utf-8")]
 					course_time_start = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_flag + start_time[records['skjc'].encode("utf-8")]))
-					startDate = '-'.join([str(int(course_time_start.split()[0].split('-')[i])) for i in range(3)])
-					startHour = str(int(course_time_start.split()[1].split(':')[0]))
-					startMinute = str(int(course_time_start.split()[1].split(':')[1]))
+					startDate, startHour, startMinute = filter(course_time_start)
 					course_time_end = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_flag + end_time[records['skjc'].encode("utf-8")]))
-					endDate = '-'.join([str(int(course_time_end.split()[0].split('-')[i])) for i in range(3)])
-					endHour = str(int(course_time_end.split()[1].split(':')[0]))
-					endMinute = str(int(course_time_end.split()[1].split(':')[1]))
+					endDate, endHour, endMinute = filter(course_time_end)
 					repeat_flag = [False, False, False, False, False, False]
 					repeat_flag.insert(int(records['skxq'])-1,True)
 					#print current_course_name, course_place, course_time_start, course_time_end, repeat_gap,repeat_times
@@ -192,16 +194,20 @@ class WebLearningScraper(object):
 						title = i.find('a').contents[0]
 						logging.info('course homework for course ' + name + ':' + title)
 						start_time = tds[1].contents[0] + " 0:00:00"
+						
 						end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime(time.strptime(tds[2].contents[0],"%Y-%m-%d")) + 86399))
+						endDate, endHour, endMinute = filter(end_time)
+						startDate, startHour, startMinute = endDate, endHour, str(int(endMinute) - 1)
 						#submitted = ( '已经提交' in tds[3].contents[0])
 						soup = self.make_soup(detail_url)
 						try:
 							details = soup.find_all('td', class_='tr_2')[1].textarea.contents[0]
 						except:
 							details = ""
-						homework_list.append(["[" + name +"]" + title, None, start_time, end_time, \
-							'0', '0','-1', '作业,,,,,', '-1', '-1', '[False, False, False]', '-1', '1000-0-0',\
-							 '[False, False, False, False, False, False, False]', '0,1', ',' ,details])
+						#print name
+						homework_list.append([ name  + '：' + title, '', startDate, startHour, startMinute, endDate, endHour, endMinute,\
+						'0', '0', '30', [u'作业', u'DDL', u'', u'', u''], details, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
+						 [False, False, False, False, False, False, False]]])
 			else:
 				continue
 		for i in self.currentCourse:
@@ -216,10 +222,13 @@ class WebLearningScraper(object):
 					homework_detail = records['courseHomeworkInfo']['detail']
 					homework_start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(records['courseHomeworkInfo']['beginDate']/1000))
 					homework_end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(records['courseHomeworkInfo']['endDate']/1000))
-
-					homework_list.append(["[" + homework_course_name +"]" + homework_title, None, homework_start_time, homework_end_time, \
-						'0', '0','-1', '作业,,,,,', '-1', '-1', '[False, False, False]', '-1', '1000-0-0',\
-						 '[False, False, False, False, False, False, False]', '0,1', ',' ,homework_detail])
+					
+					endDate, endHour, endMinute = filter(homework_end_time)
+					startDate, startHour, startMinute = endDate, endHour, str(int(endMinute) - 1)
+					#print name
+					homework_list.append([homework_course_name + '：' + homework_title, '', startDate, startHour, startMinute, endDate, endHour, endMinute,\
+						'0', '0', '30', [u'作业', u'DDL', u'', u'', u''], homework_detail, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
+						 [False, False, False, False, False, False, False]]])
 		return homework_list
 	
 def main(username, password):
@@ -229,8 +238,9 @@ def main(username, password):
 	#print(json.dumps(WebLearningScraper(username, password).courses(),ensure_ascii=False,indent = 4))
 	try:
 		info = GetTimetable(username, password).get_course_time()
+		homework = WebLearningScraper(username, password).courses()
 		#info = json.dumps(info ,ensure_ascii=False,indent = 4)
-		return info
+		return info, homework
 	except:
 		return '!!!'
 	#except:
