@@ -212,36 +212,61 @@ def remove(ID):
     # del lists[k]
     return
 
-def save(addWindow, last_num, fname_sonIDlist):
+def getinfo(addWindow):
     name = addWindow.editTitle.text()
-    if name == '': name = 'None'
     location = addWindow.editLoc.text()
-    if location == '': location = 'None'
     startDate = addWindow.editStartDate.text()
+    startHour = addWindow.editStartHour.text()
+    startMinute = addWindow.editStartMinute.text()
+    endDate = addWindow.editEndDate.text()
+    endHour = addWindow.editEndHour.text()
+    endMinute = addWindow.editEndMinute.text()
+    reminder = addWindow.comboReminder.currentIndex()
+    reminderUnit = addWindow.comboReminderUnit.currentIndex()
+    reminderNumber = addWindow.editReminderTime.text()
+    tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
+    note = addWindow.editNote.toPlainText()
+    repeatInfo = addWindow.repeatParameters
+    return [name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo]
+
+def save(info_list, last_num, fname_sonIDlist):
+    print info_list
+    #print len(info_list)
+    name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo = info_list
+
+    if name == '':
+        name = 'None'
+
+    if location == '':
+        location = 'None'
+
     if startDate == '':
         startDate = '1000-1-1'
     else:
         startDate = filter(str(startDate))
-    startHour = addWindow.editStartHour.text()
-    if startHour == '': startHour = '25'
-    startMinute = addWindow.editStartMinute.text()
-    if startMinute == '': startMinute = '61'
-    endDate = addWindow.editEndDate.text()
+
+    if startHour == '':
+        startHour = '25'
+
+    if startMinute == '':
+        startMinute = '61'
+
     if endDate == '':
         endDate = '1000-1-1'
     else:
         endDate = filter(str(endDate))
-    endHour = addWindow.editEndHour.text()
-    if endHour == '': endHour = '25'
-    endMinute = addWindow.editEndMinute.text()
-    if endMinute == '': endMinute = '61'
-    note = addWindow.editNote.toPlainText()
+
+    if endHour == '':
+        endHour = '25'
+
+    if endMinute == '':
+        endMinute = '61'
+
     if note == '': note = 'None'
-    reminder = addWindow.comboReminder.currentIndex()
-    reminderUnit = addWindow.comboReminderUnit.currentIndex()
-    reminderNumber = addWindow.editReminderTime.text()
-    if reminderNumber == '': reminderNumber = '-1'
-    tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
+
+    if reminderNumber == '':
+        reminderNumber = '-1'
+
     f_tags = open(r"data/root/tags", 'r')
     tags_list = f_tags.readlines()
     f_tags.close()
@@ -249,7 +274,7 @@ def save(addWindow, last_num, fname_sonIDlist):
     f_tags.writelines(tags_list)
     filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
     flag = False
-    # print tags_list
+    print tags
     for i in range(5):
         if tags[i] != '':
             for j in range(tags_list.__len__()):
@@ -263,7 +288,7 @@ def save(addWindow, last_num, fname_sonIDlist):
                                  + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
             f_special_tags.close()
     f_tags.close()
-    repeatInfo = addWindow.repeatParameters
+
     print repeatInfo
     # sonIDList = addWindow.sonIDList
     # 给父级事件赋子事件
@@ -305,15 +330,10 @@ def save(addWindow, last_num, fname_sonIDlist):
     os.remove(fname_sonIDlist)
     # os.remove(r'data/list/new')
     f.close()
-    # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
-    # time_routine_list = f_time_routine.readlines()
-    # time_routine_list.insert(last_num+1,str(last_num+1)+' '+filename)
-    # f_time_routine.close()
+
     f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
     f_time_routine.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
                          + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-    # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
-    # print repeatInfo
     f_time_routine.close()
 
 def saveRepeat(repeatWindow, addWindow):
@@ -333,6 +353,8 @@ def saveRepeat(repeatWindow, addWindow):
     addWindow.repeatParameters = [comboUnit, unicode(frequency), radioSelected, unicode(endTimes), unicode(endDate),
                              checkBoxGroup]  # 所有重复窗口里面设置的参数
 def filter(s):
+    if re.match(r"(\d{4}-\d{1,2}-\d{1,2})", s):
+        return s
     date = s.split()
     print date
     month = date[-3].replace('月', '')
@@ -1279,13 +1301,7 @@ class Show(Add):
             self.acceptDrops()'''
 
     def showInfo(self, infoList):
-        # print infoList
-        '''if len(infoList) == 17:
-            id, title, loc, startTime, endTime, reminder, reminderUnit, \
-            reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-            checkBoxGroup, sonID, note = infoList
-            self.sonIDList = ""
-        elif len(infoList) == 18:'''
+
         id, title, loc, startTime, endTime, reminder, reminderUnit, \
         reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
         checkBoxGroup, sonID, sonIDList, note = infoList
@@ -1611,6 +1627,7 @@ class UpdateWindow(QDialog):
                 f = open('./data/user.csv', 'w')
                 f.write(username + '\t' + password + '\t' + email)
                 f.close()
+            self.info = info
         self.accept()
 
 
@@ -1908,12 +1925,31 @@ class Talendar(QWidget):  # 主界面
             return'''
         updatewindow = UpdateWindow()
         if updatewindow.exec_():
-            '''username = updatewindow.editUsername.text()
-            password = updatewindow.editPassword.text()
-            email = updatewindow.editEmail.text()
-            f = open('./data/user.csv', 'w')
-            f.write(username + '\t' + password + '\t' + email)
-            f.close()'''
+            info = updatewindow.info
+            print len(info)
+            for item in info:
+                fname = "data/root/0_time_routine_ls"
+                fname_sonIDlist = "data/list/sonIDlist"
+                f_sonIDlist = open(fname_sonIDlist, 'w')
+                with open(fname, 'r') as f:
+                    lines = f.readlines()
+                    last_line = lines[-1]
+                    penult_line = lines[-2]
+                list1 = last_line.split(' ')
+                list2 = penult_line.split(' ')
+                # print list1
+                # print list2
+                last_num = int(list1[0])
+                if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
+                f.close()
+                f_sonIDlist.write('0' + '\n')
+                f_sonIDlist.write(str(last_num + 1) + ',')
+                f_sonIDlist.close()
+                save(item, last_num, fname_sonIDlist)
+
+
+
+
             return
 
 
@@ -2261,21 +2297,13 @@ class Talendar(QWidget):  # 主界面
         last_num = int(list1[0])
         if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
         f.close()
-        # if last_line[1] == '':
-        #    sonIDList.append(sonIDList[-1] + 1)
-        # elif last_line[1] != '':
-        #    sonIDList.append(last_num + 1)
         f_sonIDlist.write('0' + '\n')
         f_sonIDlist.write(str(last_num + 1) + ',')
         f_sonIDlist.close()
-        # f = open(r"data/list/new", 'w')
-        # list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
-        #        '[False, False, False, False, False, False, False]', '\n']
-        # f.writelines(list)
-        # f.close()
+
         addWindow = Add()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
-            save(addWindow, last_num, fname_sonIDlist)
+            save(getinfo(addWindow), last_num, fname_sonIDlist)
             self.refresh()
 
             return
@@ -2340,7 +2368,7 @@ class Talendar(QWidget):  # 主界面
     def twinkle_b(self):
         import time
         nolist = self.nolist
-        print nolist
+        #print nolist
         colnum = 7
         rownum = self.rowNum
         templist = []
@@ -2558,7 +2586,7 @@ class Talendar(QWidget):  # 主界面
                         endtype = j
                         # 0:永不 1;重复次数 2：结束日期
                 repeattimes = int(detail[12].replace('\n', ''))
-                print detail[13].replace('\n', '')
+                #print detail[13].replace('\n', '')
                 enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
                 repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
                 if TendDate >= TstartDate:
@@ -2875,7 +2903,7 @@ class Talendar(QWidget):  # 主界面
                     f_sonIDlist.write('0' + '\n')
                     f_sonIDlist.write(str(last_num + 1) + ',')
                     f_sonIDlist.close()
-                    save(showWindow, last_num, fname_sonIDlist)
+                    save(getinfo(showWindow), last_num, fname_sonIDlist)
                     remove(IDs)
                 self.refresh()
                 return
