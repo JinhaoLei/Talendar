@@ -2584,26 +2584,26 @@ class Talendar(QWidget):  # 主界面
                     elif repeattype == '1':
                         if endtype == 0:  # 按周重复，永不停止
                             weekday = TendDate.weekday()
-                            if repeatweekdays[(weekday + 1) % 7] == 'True':
+                            if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                 delta = TendDate - TstartDate
-                                if delta.days % (7 * repeatfren) == 0:
+                                if delta.days % (7 * repeatfren) < 7 :
                                     IDlist.append(temp[0])
                                     Namelist.append(temp[3])
                         elif endtype == 1:  # 按照周重复一定的次数
                             due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
                             if due_date > TendDate:
                                 weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                     delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) == 0:
+                                    if delta.days % (7 * repeatfren) < 7:
                                         IDlist.append(temp[0])
                                         Namelist.append(temp[3])
                         elif endtype == 2:  # 按周重复到某个日期
                             if enddate >= TendDate:
                                 weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                     delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) == 0:
+                                    if delta.days % (7 * repeatfren) < 7:
                                         IDlist.append(temp[0])
                                         Namelist.append(temp[3])
                     elif repeattype == '2':
@@ -2756,26 +2756,26 @@ class Talendar(QWidget):  # 主界面
                         elif repeattype == '1':
                             if endtype == 0:  # 按周重复，永不停止
                                 weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                     delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) == 0:
+                                    if delta.days % (7 * repeatfren) < 7:
                                         IDlist.append(temp[0])
                                         Namelist.append(temp[3])
                             elif endtype == 1:  # 按照周重复一定的次数
                                 due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
                                 if due_date > TendDate:
                                     weekday = TendDate.weekday()
-                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                         delta = TendDate - TstartDate
-                                        if delta.days % (7 * repeatfren) == 0:
+                                        if delta.days % (7 * repeatfren) < 7:
                                             IDlist.append(temp[0])
                                             Namelist.append(temp[3])
                             elif endtype == 2:  # 按周重复到某个日期
                                 if enddate >= TendDate:
                                     weekday = TendDate.weekday()
-                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                         delta = TendDate - TstartDate
-                                        if delta.days % (7 * repeatfren) == 0:
+                                        if delta.days % (7 * repeatfren) < 7:
                                             IDlist.append(temp[0])
                                             Namelist.append(temp[3])
                         elif repeattype == '2':
@@ -2875,6 +2875,7 @@ class Talendar(QWidget):  # 主界面
                     f_sonIDlist.write('0' + '\n')
                     f_sonIDlist.write(str(last_num + 1) + ',')
                     f_sonIDlist.close()
+
                     save(getinfo(showWindow), last_num, fname_sonIDlist)
                     remove(IDs)
                 self.refresh()
