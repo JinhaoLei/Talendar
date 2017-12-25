@@ -61,6 +61,8 @@ class GetTimetable(object):
 			current_course_name = i['course_name']
 			current_course_teacher_name = i['teacherInfo']['name']
 			current_course_teacher_email = i['teacherInfo']['email']
+			if current_course_teacher_email == None:
+				current_course_teacher_email = 'None'
 
 			timeplace_list_url = 'http://learn.cic.tsinghua.edu.cn/b/course/info/timePlace/' + i['courseId']
 			res = self.session.get(timeplace_list_url, cookies=self.cookies).json()
@@ -69,7 +71,7 @@ class GetTimetable(object):
 				if records['skjc'].encode("utf-8") == '0':
 					logging.info('unfixed course time ' + current_course_name)
 				else:
-					
+					#print current_course_name
 					repeat_gap = '1'
 					if records['skzc'] =="前8周":
 						repeat_times = '8'
@@ -98,15 +100,21 @@ class GetTimetable(object):
 					#course_time_start = time_flag + start_time[records['skjc'].encode("utf-8")]
 					#course_time_end = time_flag + end_time[records['skjc'].encode("utf-8")]
 					course_time_start = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_flag + start_time[records['skjc'].encode("utf-8")]))
+					startDate = '-'.join([str(int(course_time_start.split()[0].split('-')[i])) for i in range(3)])
+					startHour = str(int(course_time_start.split()[1].split(':')[0]))
+					startMinute = str(int(course_time_start.split()[1].split(':')[1]))
 					course_time_end = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_flag + end_time[records['skjc'].encode("utf-8")]))
-
+					endDate = '-'.join([str(int(course_time_end.split()[0].split('-')[i])) for i in range(3)])
+					endHour = str(int(course_time_end.split()[1].split(':')[0]))
+					endMinute = str(int(course_time_end.split()[1].split(':')[1]))
 					repeat_flag = [False, False, False, False, False, False]
 					repeat_flag.insert(int(records['skxq'])-1,True)
+					#print current_course_name, course_place, course_time_start, course_time_end, repeat_gap,repeat_times
+					#print current_course_teacher_name, current_course_teacher_email
 					course_info_list = [current_course_name, course_place, \
-					course_time_start, course_time_end, 0, 0, '课程' ,'' ,'' ,'' ,'' ,\
-					'1', repeat_gap, [False, True, False], repeat_times, '', repeat_flag, \
-					"教师姓名："+current_course_teacher_name + "\r教师邮箱：" + current_course_teacher_email\
-					 + "\r课程类型：" + records['skzc'] ]
+					startDate, startHour, startMinute, endDate, endHour, endMinute, '0', '0', '30', [u'课程', u'', u'', u'', u''],\
+					"教师姓名："+current_course_teacher_name + "\r教师邮箱：" + current_course_teacher_email + "\r课程类型：" + records['skzc'] ,\
+					 [1, unicode(repeat_gap), [False, True, False], unicode(repeat_times), '1000-1-1', repeat_flag]]
 					class_list.append(course_info_list)
 		return class_list
 
@@ -214,13 +222,19 @@ class WebLearningScraper(object):
 						 '[False, False, False, False, False, False, False]', '0,1', ',' ,homework_detail])
 		return homework_list
 	
-if __name__ == '__main__':
-	username=''
-	password=''  # TODO:change username and password
-	if username is None or password is None:
-        	username = input("TsinghuaId:")
-        	password = getpass.getpass("Password:")
-	print(json.dumps(WebLearningScraper(username, password).courses(),ensure_ascii=False,indent = 4))
-	print(json.dumps(GetTimetable(username, password).get_course_time(),ensure_ascii=False,indent = 4))
+def main(username, password):
+	#username='
+	#password=''  # TODO:change username and password
+
+	#print(json.dumps(WebLearningScraper(username, password).courses(),ensure_ascii=False,indent = 4))
+	try:
+		info = GetTimetable(username, password).get_course_time()
+		#info = json.dumps(info ,ensure_ascii=False,indent = 4)
+		return info
+	except:
+		return '!!!'
+	#except:
+	#	return '!!!'
+	
 
 
