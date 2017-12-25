@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import sync
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from time import time,localtime,strftime
+from time import time, localtime, strftime
 from datetime import datetime
 from datetime import timedelta
 from calendar import monthrange
@@ -11,19 +12,35 @@ from functools import partial
 import os
 import os.path
 import time
+import re
 from get_class import *
+
+
 FontSize = 10
 FontType = "SimHei"
+newFontType = "YouYuan"
+newFontSize = 10
 RowHeight = 90
 ColWidth = 100
 pic_dir = "./pic/"
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+
+def getfont():
+    font = QFont()
+    font.setFamily(newFontType)
+    font.setBold(True)
+    font.setPointSize(newFontSize)
+    return font
+
+
 def transDate(date):
     [year, month, day] = date.split('-')
     s = month + u'月' + day + u'日 ' + year
     return s
+
+
 def details(ID):
     f = open(r"data/root/0_time_routine_ls", 'r')
     lists = f.readlines()
@@ -33,18 +50,19 @@ def details(ID):
     for i in range(len(lists)):
         lists[i] = lists[i].replace('\n', '')
         temp_list = lists[i].split(' ')
-        #print temp_list, ID
-        #print temp_list[0], ID
+        # print temp_list, ID
+        # print temp_list[0], ID
         if ID == temp_list[0]:
             filename_list = temp_list[2].split('-')
-            filename = temp_list[0] + '$$'+filename_list[0]+'-'+filename_list[1]+'-'+filename_list[2] + '$$' + filename_list[3]
+            filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + filename_list[2] + '$$' + \
+                       filename_list[3]
             flag = True
     if flag:
         path = 'data/list/' + filename
         notepath = 'data/note/' + ID
         if os.path.isfile(path):
             f = open(path, 'r')
-            f_notepath = open(notepath,'r')
+            f_notepath = open(notepath, 'r')
             note = f_notepath.read()
             _list = f.readlines()
             for i in range(len(_list)):
@@ -54,6 +72,7 @@ def details(ID):
     else:
         return _list
 
+
 def getlist():
     f = open(r"data/root/0_time_routine_ls", 'r')
     lists = f.readlines()
@@ -62,10 +81,11 @@ def getlist():
         lists[i] = lists[i].replace('\n', '')
     del lists[0]
     del lists[0]
-    #print lists
+    # print lists
     return lists
-def get_tag_list(tag):
 
+
+def get_tag_list(tag):
     path = u'data/root/'.encode('utf-8') + tag
 
     f = open(path.decode('utf8'), 'r')
@@ -73,6 +93,8 @@ def get_tag_list(tag):
     for i in range(lists.__len__()):
         lists[i] = lists[i].replace('\n', '')
     return lists
+
+
 def getTagList():
     f = open(r"data/root/tags", 'r')
     tags = []
@@ -82,6 +104,8 @@ def getTagList():
         else:
             tags.append(line.strip())
     return tags
+
+
 def getcompletelist():
     full_list = []
     lists = getlist()
@@ -91,10 +115,13 @@ def getcompletelist():
         full_list.append(temp_list)
     return full_list
 
+
 def tranBoolList(aList):
     a = aList.replace('False', '0').replace('True', '1')
     a = a[1:-1].split(', ')
     return a
+
+
 def remove(ID):
     detail = details(ID)
     tags = detail[8].split(',')
@@ -108,11 +135,12 @@ def remove(ID):
             f = open(tag_path.decode('utf-8').encode('gbk'), 'r')
             tag_list = f.readlines()
             f.close()
-            for j in tag_list[::-1]:
-                _tag_list.append(tag_list[j].replace('\n',''))
+            for j in range(len(tag_list)):
+                _tag_list.append(tag_list[j].replace('\n', ''))
                 tag_temp = _tag_list[j].split(' ')
                 if ID == tag_temp[0]:
-                    del tag_list[k]
+                    del tag_list[j]
+                    break
             if len(tag_list):
                 f = open(tag_path.decode('utf-8').encode('gbk'), 'w')
                 print tag_list
@@ -126,10 +154,12 @@ def remove(ID):
                 for h in range(len(tag_lists)):
                     if tags[i] == tag_lists[h].replace('\n', '').decode('utf-8'):
                         del tag_lists[h]
-                        f = open(r"data/root/tags", 'w')
-                        f.writelines(tag_lists)
+                        break
+                f = open(r"data/root/tags", 'w')
+                f.writelines(tag_lists)
+                f.close()
     time_list = detail[4].split(' ')
-    filename = ID +'$$' +time_list[0]+'$$'+time_list[1]
+    filename = ID + '$$' + time_list[0] + '$$' + time_list[1]
     f = open(r"data/root/0_time_routine_ls", 'r')
     lists = f.readlines()
     f.close()
@@ -137,7 +167,7 @@ def remove(ID):
     lenth = len(lists)
     for i in range(0, len(lists))[::-1]:
         _lists.append(lists[i].replace('\n', ''))
-        temp_list = _lists[lenth-1-i].split(' ')
+        temp_list = _lists[lenth - 1 - i].split(' ')
         if ID == temp_list[0]:
             path = 'data/list/' + filename
             os.remove(path)
@@ -160,15 +190,15 @@ def remove(ID):
                 for i in range(0, len(pa_sonlist))[::-1]:
                     if pa_sonlist[i] == ID:
                         del pa_sonlist[i]
-                        pa_numson = int(parent_list[-1])-1
+                        pa_numson = int(parent_list[-1]) - 1
                         parent_list[-1] = str(pa_numson)
                 pa_time = parent_list[4].split(' ')
                 pa_fil_name = parent_list[0] + '$$' + pa_time[0] + '$$' + pa_time[1]
                 pa_fil_name = 'data/list/' + pa_fil_name
                 parent_f = open(pa_fil_name, 'w')
                 for i in range(len(parent_list)):
-                    parent_f.write(parent_list[i]+'\n')
-                for i in range(len(pa_sonlist)-1):
+                    parent_f.write(parent_list[i] + '\n')
+                for i in range(len(pa_sonlist) - 1):
                     parent_f.write(pa_sonlist[i] + ',')
                 parent_f.close()
     else:
@@ -177,43 +207,175 @@ def remove(ID):
         del son_list[0]
         for i in range(len(son_list)):
             remove(son_list[i])
-    #print lists
-    #print _lists
-    #del lists[k]
+    # print lists
+    # print _lists
+    # del lists[k]
     return
+
+def save(addWindow, last_num, fname_sonIDlist):
+    name = addWindow.editTitle.text()
+    if name == '': name = 'None'
+    location = addWindow.editLoc.text()
+    if location == '': location = 'None'
+    startDate = addWindow.editStartDate.text()
+    if startDate == '':
+        startDate = '1000-1-1'
+    else:
+        startDate = filter(str(startDate))
+    startHour = addWindow.editStartHour.text()
+    if startHour == '': startHour = '25'
+    startMinute = addWindow.editStartMinute.text()
+    if startMinute == '': startMinute = '61'
+    endDate = addWindow.editEndDate.text()
+    if endDate == '':
+        endDate = '1000-1-1'
+    else:
+        endDate = filter(str(endDate))
+    endHour = addWindow.editEndHour.text()
+    if endHour == '': endHour = '25'
+    endMinute = addWindow.editEndMinute.text()
+    if endMinute == '': endMinute = '61'
+    note = addWindow.editNote.toPlainText()
+    if note == '': note = 'None'
+    reminder = addWindow.comboReminder.currentIndex()
+    reminderUnit = addWindow.comboReminderUnit.currentIndex()
+    reminderNumber = addWindow.editReminderTime.text()
+    if reminderNumber == '': reminderNumber = '-1'
+    tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
+    f_tags = open(r"data/root/tags", 'r')
+    tags_list = f_tags.readlines()
+    f_tags.close()
+    f_tags = open(r"data/root/tags", 'w')
+    f_tags.writelines(tags_list)
+    filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
+    flag = False
+    # print tags_list
+    for i in range(5):
+        if tags[i] != '':
+            for j in range(tags_list.__len__()):
+                if str(tags[i]) == tags_list[j].replace('\n', ''):
+                    flag = True
+            if not flag:
+                f_tags.write(str(tags[i]) + '\n')
+            tag_filename = 'data/root/' + tags[i]
+            f_special_tags = open(tag_filename.decode('utf-8'), 'a')
+            f_special_tags.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
+                                 + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
+            f_special_tags.close()
+    f_tags.close()
+    repeatInfo = addWindow.repeatParameters
+    print repeatInfo
+    # sonIDList = addWindow.sonIDList
+    # 给父级事件赋子事件
+    note_path = 'data/note/' + str(last_num + 1)
+    path = 'data/list/' + filename
+    f_notefile = open(note_path, 'w')
+    f_notefile.write(note)
+    f_notefile.close()
+    f = open(path, 'w')
+    f.write(str(last_num + 1) + '\n')
+    f.write(name + '\n')
+    f.write(location + '\n')
+    f.write(startDate + ' ' + startHour + ' ' + startMinute + '\n')
+    f.write(endDate + ' ' + endHour + ' ' + endMinute + '\n')
+    f.write(str(reminder) + '\n')
+    f.write(str(reminderUnit) + '\n')
+    f.write(reminderNumber + '\n')
+    for i in range(5):
+        f.write(str(tags[i]) + ',')
+    f.write('\n')
+    # f_repeat = open(r'data/list/new', 'r')
+    # repeat_list = f_repeat.readlines()
+    # f_repeat.close()
+    if repeatInfo == []:
+        f.write('-1' + '\n')
+        f.write('-1' + '\n')
+        f.write('[False, False, False]' + '\n')
+        f.write('-1' + '\n')
+        f.write('1000-1-1' + '\n')
+        f.write('[False, False, False, False, False, False, False]' + '\n')
+    else:
+        for i in range(6):
+            f.write(str(repeatInfo[i]) + '\n')
+    f_sonIDlist = open(fname_sonIDlist, 'r')
+    son_list = f_sonIDlist.readlines()
+    # print son_list
+    f.writelines(son_list)
+    f_sonIDlist.close()
+    os.remove(fname_sonIDlist)
+    # os.remove(r'data/list/new')
+    f.close()
+    # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
+    # time_routine_list = f_time_routine.readlines()
+    # time_routine_list.insert(last_num+1,str(last_num+1)+' '+filename)
+    # f_time_routine.close()
+    f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
+    f_time_routine.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
+                         + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
+    # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
+    # print repeatInfo
+    f_time_routine.close()
+
 
 def filter(s):
     date = s.split()
+    print date
     month = date[-3].replace('月', '')
     weekdays = {'周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7}
-    months = {'一': 1,'二': 2,'三': 3,'四': 4,'五': 5,'六': 6,'七': 7,'八': 8,'九': 9,'十': 10,'十一': 11,'十二': 12}
     weekday = weekdays[date[0]]
-    month = months[month]
-    date = date[-1] + '-' + str(month) + '-' + date[-2]
+    date = date[-1] + '-' + month + '-' + date[-2]
     #date_weekday = date + '-' + str(weekday)
     # print date
     # print date_weekday
     return date
 
+
+
 class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
-    def __init__(self):
+    def __init__(self, weekday):
         super(RepeatWindow, self).__init__()
         self.setWindowTitle(u"重复")
         self.setModal(True)
         self.initLayout()
-        self.resize(300, 100)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setFixedSize(296, 197)
+        # self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+
+        # self.setWindowFlags(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+
+        self.flagb = 0
+        self.background = QPixmap()
+        self.weekday = weekday
         self.rejectFlag = 0
         self.show()
 
+    def paintEvent(self, event):
+        p = QPainter(self)
+        if self.flagb == 0:
+            self.setFixedSize(296, 197)
+            self.background.load("./pic/repeat_small.png")
+            p.drawPixmap(0, 0, 296, 197, self.background)
+        elif self.flagb == 1:
+            self.setFixedSize(374, 216)
+            self.setContentsMargins(5,0,0,0)
+            self.background.load("./pic/repeat_big.png")
+            p.drawPixmap(0, 0, 374, 216, self.background)
+
     def diffUnit(self, index):
 
-
         if self.comboUnit.currentIndex() == 1:
+            # print self.width(), self.height()
+            self.flagb = 1
             for i in range(7):
                 self.checkBoxGroup[i].show()
                 self.lblGroup[i].show()
                 self.lblWeekRepeat.show()
+                if i==self.weekday:
+                    self.checkBoxGroup[i].setChecked(True)
+
         else:
+            self.flagb = 0
             for i in range(7):
                 self.checkBoxGroup[i].hide()
                 self.lblGroup[i].hide()
@@ -231,7 +393,7 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.editTimes.clear()
 
     def setNeverEnable(self):
-        #self.editNever.setEnabled(True)
+        # self.editNever.setEnabled(True)
         self.editTimes.setEnabled(False)
         self.editEnd.setEnabled(False)
         self.editTimes.clear()
@@ -242,16 +404,19 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.bottomLayout = QGridLayout()
         self.middleLayout = QGridLayout()
 
-
         lblUnit = QLabel(u'频率单位')
-        lblUnit.setMaximumWidth(50)
+        lblUnit.setStyleSheet("color:white")
+        lblUnit.setFont(getfont())
+        lblUnit.setMaximumWidth(80)
         self.comboUnit = QComboBox()
         self.comboUnit.setMaximumWidth(50)
+        #self.comboUnit.setStyleSheet("background-color:white")
         lblFre = QLabel(u'频率')
+        lblFre.setFont(getfont())
+        lblFre.setStyleSheet("color:white")
         lblFre.setMaximumWidth(50)
         self.editFre = QLineEdit()
         self.editFre.setMaximumWidth(50)
-
 
         self.comboUnit.addItem(u"天")
         self.comboUnit.addItem(u"周")
@@ -259,7 +424,9 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.comboUnit.addItem(u"年")
 
         self.lblWeekRepeat = QLabel(u'重复时间')
-        #self.lblWeekRepeat.setMaximumWidth(50)
+        self.lblWeekRepeat.setFont(getfont())
+        self.lblWeekRepeat.setStyleSheet("color:white")
+        # self.lblWeekRepeat.setMaximumWidth(50)
 
         self.Mon = QCheckBox()
         self.Tue = QCheckBox()
@@ -279,16 +446,25 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.checkBoxGroup = [self.Mon, self.Tue, self.Wedn, self.Thu, self.Fri, self.Sat, self.Sun]
         self.lblGroup = [self.lblMon, self.lblTue, self.lblWedn, self.lblThu, self.lblFri, self.lblSat, self.lblSun]
         self.comboUnit.currentIndexChanged.connect(self.diffUnit)
-
-
+        for lbl in self.lblGroup:
+            lbl.setStyleSheet("color:white")
+            lbl.setFont(getfont())
 
         lblEnd = QLabel(u'结束时间')
+        lblEnd.setStyleSheet("color:white")
+        lblEnd.setFont(getfont())
         lblNever = QLabel(u'永不')
+        lblNever.setFont(getfont())
+        lblNever.setStyleSheet("color:white")
         self.radioNever = QRadioButton()
         self.radioNever.setMaximumWidth(20)
         self.radioTimes = QRadioButton()
         lblRepeat = QLabel(u'重复')
+        lblRepeat.setStyleSheet("color:white")
+        lblRepeat.setFont(getfont())
         lblTimes = QLabel(u'次后')
+        lblTimes.setFont(getfont())
+        lblTimes.setStyleSheet("color:white")
         lblTimes.setMaximumWidth(50)
         self.editTimes = QLineEdit()
         self.editTimes.setMaximumWidth(30)
@@ -297,13 +473,13 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.radioNever.clicked.connect(self.setNeverEnable)
         self.radioEnd = QRadioButton()
         lblEndDate = QLabel(u'结束日期')
+        lblEndDate.setFont(getfont())
+        lblEndDate.setStyleSheet("color:white")
         self.editEnd = calendarLineEdit(660, 410)
         self.editEnd.setEnabled(False)
-        #self.editEnd.setMaximumWidth(170)
+        # self.editEnd.setMaximumWidth(170)
         self.editEnd.setFixedWidth(110)
         self.radioEnd.clicked.connect(self.setEndEnable)
-
-
 
         self.topLayout.addWidget(lblUnit, 0, 0)
         self.topLayout.addWidget(self.comboUnit, 0, 1)
@@ -312,13 +488,13 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.topHLayout = QHBoxLayout()
         self.topHLayout.addLayout(self.topLayout)
         self.topHLayout.addStretch()
-        #topSpace = QSpacerItem(200, 1)
-        #self.topLayout.addItem(topSpace, 0, 2)
-        #self.topLayout.setColumnStretch(0, 5)
-        #self.topLayout.setColumnStretch(1, 1)
-        #self.topLayout.setColumnStretch(2, 5)
-        #self.topLayout.setColumnStretch(0, 1)
-        #self.topLayout.setColumnStretch(1, 3)
+        # topSpace = QSpacerItem(200, 1)
+        # self.topLayout.addItem(topSpace, 0, 2)
+        # self.topLayout.setColumnStretch(0, 5)
+        # self.topLayout.setColumnStretch(1, 1)
+        # self.topLayout.setColumnStretch(2, 5)
+        # self.topLayout.setColumnStretch(0, 1)
+        # self.topLayout.setColumnStretch(1, 3)
 
         self.middleLayout.addWidget(lblEnd, 0, 0)
         self.middleLayout.addWidget(self.radioNever, 0, 1)
@@ -334,7 +510,6 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.middleHLayout = QHBoxLayout()
         self.middleHLayout.addLayout(self.middleLayout)
         self.middleHLayout.addStretch()
-
 
         self.bottomLayout.addWidget(self.lblWeekRepeat, 0, 0)
         self.lblWeekRepeat.hide()
@@ -358,15 +533,25 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.bottomCancelLayout.addStretch()
         self.bottomCancelLayout.addWidget(buttonsOkCancel)
 
-        #self.bottomLayout.addWidget(buttonsOkCancel, 1, 2)
+        # self.bottomLayout.addWidget(buttonsOkCancel, 1, 2)
+
+        self.btnClose = QPushButton()
+        self.btnClose.setFixedSize(15, 15)
+
+        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.clicked.connect(self.close)
+
+        self.topBarLayout = QHBoxLayout()
+        self.topBarLayout.addWidget(self.btnClose, 0, Qt.AlignRight | Qt.AlignTop)
 
         self.mainLayout = QGridLayout(self)
-
-        self.mainLayout.addLayout(self.topHLayout, 0, 0)
-        #self.mainLayout.addLayout(self.spaceLayout, 1, 0)
-        self.mainLayout.addLayout(self.middleHLayout, 1, 0)
-        self.mainLayout.addLayout(self.bottomHLayout, 2, 0)
-        self.mainLayout.addLayout(self.bottomCancelLayout, 3, 0)
+        self.mainLayout.setContentsMargins(10, 5, 15, 15)
+        self.mainLayout.addLayout(self.topBarLayout, 0, 0)
+        self.mainLayout.addLayout(self.topHLayout, 1, 0)
+        # self.mainLayout.addLayout(self.spaceLayout, 1, 0)
+        self.mainLayout.addLayout(self.middleHLayout, 2, 0)
+        self.mainLayout.addLayout(self.bottomHLayout, 3, 0)
+        self.mainLayout.addLayout(self.bottomCancelLayout, 4, 0)
 
 
 class CalendarWindow(QDialog):  # 日历选择控件
@@ -411,20 +596,90 @@ class calendarLineEdit(QLineEdit):  # 点击会出现日历选择的编辑条
         self.setText(self.date.toString())
 
 
+class Warn(QDialog):
+    def __init__(self, s):
+        super(Warn, self).__init__()
+
+        self.btn = QPushButton()
+        self.text = QLabel(unicode(s))
+        self.text.setStyleSheet('color:white')
+        font = QFont()
+        font.setFamily(newFontType)
+        font.setBold(True)
+        font.setPointSize(newFontSize)
+        self.text.setFont(font)
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.text)
+        self.bLayout= QHBoxLayout()
+        self.layout.addLayout(self.bLayout)
+        self.bLayout.addStretch(1)
+        self.bLayout.addWidget(self.btn)
+        self.bLayout.addStretch(1)
+        self.setModal(True)
+
+        self.btn.clicked.connect(self.accept)
+
+        self.btn.setFixedSize(75, 20)
+        self.btn.setStyleSheet(
+            "QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
+
+        #self.btn.setAlignment(Qt.AlignCenter)
+        self.text.setAlignment(Qt.AlignCenter)
+        self.layout.setAlignment(Qt.AlignHCenter)
+        self.setFixedSize(140, 90)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.background = QPixmap()
+        self.background.load("./pic/warn.png")
+
+        self.show()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 140, 90, self.background)
+
 
 class Add(QDialog):  # 新建事项窗口
     def __init__(self):
         super(Add, self).__init__()
         self.setWindowTitle(u"新建")
         self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setWindowFlags(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        today = time.strftime('%Y-%m-%d-%w',time.localtime(time.time()))
+        dates = today.split('-')
+        table = {'0':u'周日', '1':u'周一', '2':u'周二', '3':u'周三', '4':u'周四', '5':u'周五','6':u'周六' }
+        self.r_table = {u'周日':6, u'周一':0, u'周二':1, u'周三':2, u'周四':3, u'周五':4, u'周六':5}
+        self.date = table[dates[-1]] + ' ' + dates[1] + u'月' + ' ' + dates[2] + ' ' + dates[0]
+        self.weekday = int(dates[-1]) - 1
+        if self.weekday == -1:
+            self.weekday = 6
         self.setModal(True)
         self.initLayout()
-        self.setFixedSize(500, 500)
+        self.setFixedSize(540, 540)
+
+        self.background = QPixmap()
+        self.background.load("./pic/white.png")
+
         # self.setFixedSize(self.width(), self.height())
         self.show()
 
+    # def DropSha
+
+
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 540, 540, self.background)
+
     def Repeat(self):  # 新建重复窗口
-        repeatWindow = RepeatWindow()
+        date = unicode(self.editStartDate.text()).split()[0]
+        self.weekday = self.r_table[date]
+        #print self.weekday
+        repeatWindow = RepeatWindow(self.weekday)
         self.repeatParameters = []
         if repeatWindow.exec_():  # 用户在重复窗口里选择OK，在退出时获得所有重复窗口里设置的参数
             comboUnit = repeatWindow.comboUnit.currentIndex()
@@ -442,28 +697,27 @@ class Add(QDialog):  # 新建事项窗口
             checkBoxGroup = [repeatWindow.checkBoxGroup[i].isChecked() for i in range(7)]
             self.repeatParameters = [comboUnit, unicode(frequency), radioSelected, unicode(endTimes), unicode(endDate),
                                      checkBoxGroup]  # 所有重复窗口里面设置的参数
-            #print checkBoxGroup
-            #print self.repeatParameters
-            #if os.path.isfile(r"data/list/new_son"):
+            # print checkBoxGroup
+            # print self.repeatParameters
+            # if os.path.isfile(r"data/list/new_son"):
             #    f = open(r'data/list/new_son', 'w')
-            #else:
+            # else:
             #    f = open(r"data/list/new", 'w')
-            #print type(self.repeatParameters)
-            #f.write(str(comboUnit) + '\n')
-            #f.write(str(frequency) + '\n')
-            #f.write(str(radioSelected) + '\n')
-            #f.write(str(endTimes) + '\n')
-            #f.write(str(endDate) + '\n')
-            #f.write(str(checkBoxGroup) + '\n')
-            #f.close()
-
+            # print type(self.repeatParameters)
+            # f.write(str(comboUnit) + '\n')
+            # f.write(str(frequency) + '\n')
+            # f.write(str(radioSelected) + '\n')
+            # f.write(str(endTimes) + '\n')
+            # f.write(str(endDate) + '\n')
+            # f.write(str(checkBoxGroup) + '\n')
 
     def diffUnit(self, index):
         if self.comboReminder.currentIndex() == 0:
-            self.editReminderTime.setText("-1")
+
             self.comboReminderUnit.setCurrentIndex(-1)
             self.editReminderTime.clear()
             self.editReminderTime.hide()
+            self.editReminderTime.setText("30")
             self.comboReminderUnit.hide()
         else:
             self.editReminderTime.show()
@@ -475,14 +729,15 @@ class Add(QDialog):  # 新建事项窗口
         self.tagGroup[self.numOfClicked - 1].setEnabled(True)
 
     def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
-        #f = open(r"data/list/new_son", 'w')
-        #list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
+        # f = open(r"data/list/new_son", 'w')
+        # list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
         #        '[False, False, False, False, False, False, False]', '\n']
-        #f.writelines(list)
-        #f.close()
+        # f.writelines(list)
+        # f.close()
         addWindow = Add()
         # addWindow.buttonSon.hide()
         addWindow.buttonSon.setEnabled(False)
+        addWindow.buttonSon.hide()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
             fname_sonIDlist = "data/list/sonIDlist"
             f_sonIDlist = open(fname_sonIDlist, 'r')
@@ -496,7 +751,7 @@ class Add(QDialog):  # 新建事项窗口
             if num_son == 0:
                 sonNum = parents_number + 1
             else:
-                #list2 = last_line.split(',')
+                # list2 = last_line.split(',')
                 print list3
                 elder = int(list3[-2])
                 sonNum = elder + 1
@@ -554,7 +809,7 @@ class Add(QDialog):  # 新建事项窗口
                         f_tags.write(str(tags[i]) + '\n')
                     tag_filename = 'data/root/' + tags[i]
                     f_special_tags = open(tag_filename.decode('utf-8'), 'a')
-                    f_special_tags.write(str(sonNum) + ' ' + startDate + '-' + startHour +'-' + startMinute + ' '
+                    f_special_tags.write(str(sonNum) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
                                          + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
                     f_special_tags.close()
             f_tags.close()
@@ -570,7 +825,7 @@ class Add(QDialog):  # 新建事项窗口
             f_notefile = open(note_path, 'w')
             f_notefile.write(note)
             f_notefile.close()
-            #print path
+            # print path
             f = open(path, 'w')
             f.write(str(sonNum) + '\n')
             f.write(name + '\n')
@@ -583,9 +838,9 @@ class Add(QDialog):  # 新建事项窗口
             for i in range(5):
                 f.write(str(tags[i]) + ',')
             f.write('\n')
-            #f_repeat = open(r'data/list/new_son', 'r')
-            #repeat_list = f_repeat.readlines()
-            #f.writelines(repeat_list)
+            # f_repeat = open(r'data/list/new_son', 'r')
+            # repeat_list = f_repeat.readlines()
+            # f.writelines(repeat_list)
             if repeatInfo == []:
                 f.write('-1' + '\n')
                 f.write('-1' + '\n')
@@ -597,12 +852,12 @@ class Add(QDialog):  # 新建事项窗口
                 for i in range(6):
                     f.write(str(repeatInfo[i]) + '\n')
             f.write(str(0) + '\n' + str(parents_number) + ',')
-            #f_repeat.close()
-            #os.remove(r'data/list/new_son')
+            # f_repeat.close()
+            # os.remove(r'data/list/new_son')
             f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
             f_time_routine.write(str(sonNum) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
                                  + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-            #print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
+            # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
             # print repeatInfo
             return
 
@@ -610,90 +865,125 @@ class Add(QDialog):  # 新建事项窗口
         self.tagGroup[self.numOfClicked - 1].setEnabled(False)
         self.tagGroup[self.numOfClicked - 1].clear()
         self.numOfClicked -= 1
+
     def CheckStartHour(self):
         try:
             value = int(self.editStartHour.text())
         except:
             value = -1
-        if value <0 or value >23:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
+        if value < 0 or value > 23:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
+
     def CheckEndHour(self):
         try:
             value = int(self.editEndHour.text())
         except:
             value = -1
-        if value <0 or value >23:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
+        if value < 0 or value > 23:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
+
     def CheckStartMinute(self):
         try:
             value = int(self.editStartMinute.text())
         except:
             value = -1
-        if value <0 or value >59:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
+        if value < 0 or value > 59:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
+
     def CheckEndMinute(self):
         try:
             value = int(self.editEndMinute.text())
         except:
             value = -1
-        if value <0 or value >59:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
+        if value < 0 or value > 59:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
 
     def CheckMinute(self):
-        if int(self.editStartMinute.text()) <0 or int(self.editStartMinute.text()) > 59:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
-        elif int(self.editEndMinute.text()) <0 or int(self.editEndMinute.text()) > 59:
-            QMessageBox.warning(self, u'警告', u'输入数值超出范围',
-                                QMessageBox.Yes, QMessageBox.Yes)
+        if int(self.editStartMinute.text()) < 0 or int(self.editStartMinute.text()) > 59:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
+        elif int(self.editEndMinute.text()) < 0 or int(self.editEndMinute.text()) > 59:
+            warn = Warn('输入数值超出范围')
+            if warn.exec_():
+                return
 
     def Check(self):
-        if self.editTitle.text() != '' and self.editStartDate.text() != '' and self.editEndDate.text() != ''\
-            and self.editStartHour.text() != '' and self.editStartMinute.text() != '' and self.editEndMinute.text() != '' \
-            and self.editEndHour.text() != '':
-            if (int(self.editEndHour.text()) > int(self.editStartHour.text())) or (int(self.editEndHour.text()) == int(self.editStartHour.text()) and int(self.editEndMinute.text()) > int(self.editStartMinute.text())):
+        if self.editTitle.text() != '' and self.editStartDate.text() != '' and self.editEndDate.text() != '' \
+                and self.editStartHour.text() != '' and self.editStartMinute.text() != '' and self.editEndMinute.text() != '' \
+                and self.editEndHour.text() != '':
+            if (int(self.editEndHour.text()) > int(self.editStartHour.text())) or (
+                    int(self.editEndHour.text()) == int(self.editStartHour.text()) and int(
+                    self.editEndMinute.text()) > int(self.editStartMinute.text())):
                 self.accept()
             else:
-                QMessageBox.warning(self, u'警告', u'信息填写有误！', QMessageBox.Yes, QMessageBox.Yes)
+                warn = Warn('时间信息填写有误')
+                if warn.exec_():
+                    return
 
         else:
-            QMessageBox.warning(self, u'警告', u'信息填写不完整！', QMessageBox.Yes, QMessageBox.Yes)
+            warn = Warn('时间信息填写有误')
+            if warn.exec_():
+                return
 
     def changeEditEndDate(self):
         self.editEndDate.setText(self.editStartDate.text())
-
 
     def initLayout(self):
         self.topLayout = QGridLayout()
         self.bottomLayout = QGridLayout()
         lblTitle = QLabel(u'标题*')
+        font = QFont()
+        font.setFamily(newFontType)
+        font.setBold(True)
+        font.setPointSize(newFontSize)
+        lblTitle.setFont(font)
+
+        lblTitle.setStyleSheet("color:white")
         lblTitle.setMaximumWidth(100)
         self.editTitle = QLineEdit()
 
         lblStart = QLabel(u'开始时间*')
+        lblStart.setFont(font)
+        lblStart.setStyleSheet("color:white")
         # lblStart.setMaximumWidth(50)
 
         self.editStartDate = calendarLineEdit(510, 170)
         self.editStartDate.setMaximumWidth(110)
-        self.editStartDate.textChanged.connect(self.changeEditEndDate)
+
+        self.editStartDate.setText(self.date)
 
         self.editStartHour = QLineEdit()
         self.editStartHour.setMaximumWidth(30)
         self.lblStartHour = QLabel(u'时*')
+        self.lblStartHour.setFont(font)
+        self.lblStartHour.setStyleSheet("color:white")
         self.editStartMinute = QLineEdit()
         self.editStartMinute.setMaximumWidth(30)
         self.lblStartMinute = QLabel(u'分*')
+        self.lblStartMinute.setFont(font)
+        self.lblStartMinute.setStyleSheet("color:white")
         lblEnd = QLabel(u'结束时间*')
+        lblEnd.setStyleSheet("color:white")
+        lblEnd.setFont(font)
 
         self.editEndDate = QLineEdit()
+        self.editEndDate.setText(self.date)
         self.editEndDate.setMaximumWidth(110)
         self.editEndDate.setReadOnly(True)
+        self.editStartDate.textChanged.connect(self.changeEditEndDate)
         self.editEndHour = QLineEdit()
         self.lblEndHour = QLabel(u'时*')
+        self.lblEndHour.setStyleSheet("color:white")
+        self.lblEndHour.setFont(font)
         self.lblEndHour.setMaximumWidth(30)
         self.editEndMinute = QLineEdit()
         self.editEndMinute.textChanged.connect(self.CheckEndMinute)
@@ -703,21 +993,33 @@ class Add(QDialog):  # 新建事项窗口
         self.editEndMinute.setMaximumWidth(30)
         self.editEndHour.setMaximumWidth(30)
         self.lblEndMinute = QLabel(u'分*')
+        self.lblEndMinute.setStyleSheet("color:white")
+        self.lblEndMinute.setFont(font)
         # self.lblEndMinute.setMaximumWidth(110)
 
 
         lblLoc = QLabel(u'地点')
+        lblLoc.setStyleSheet("color:white")
+        lblLoc.setFont(font)
         self.editLoc = QLineEdit()
 
         lblNote = QLabel(u'备注')
+        lblNote.setStyleSheet("color:white")
+        lblNote.setFont(font)
         self.editNote = QTextEdit()
 
         lblRepeat = QLabel(u'重复')
+        lblRepeat.setStyleSheet("color:white")
+        lblRepeat.setFont(getfont())
         self.buttonRepeat = QPushButton(u'...')
         self.buttonRepeat.setMaximumWidth(30)
+        #self.buttonRepeat.setStyleSheet('background-color:white')
 
         lblReminder = QLabel(u'提醒')
+        lblReminder.setFont(font)
+        lblReminder.setStyleSheet("color:white")
         self.comboReminder = QComboBox()
+        #self.comboReminder.setStyleSheet("background-color:white")
         lblReminder.setMaximumWidth(70)
         self.comboReminder.setMaximumWidth(70)
 
@@ -726,8 +1028,9 @@ class Add(QDialog):  # 新建事项窗口
         self.comboReminder.addItem(u"电子邮件")
         self.editReminderTime = QLineEdit()
         self.editReminderTime.setMaximumWidth(30)
+        self.editReminderTime.setText('30')
         self.comboReminderUnit = QComboBox()
-        #self.comboReminderUnit.setMaximumWidth(30)
+        # self.comboReminderUnit.setMaximumWidth(30)
 
         self.comboReminderUnit.addItem(u"分钟*")
         self.comboReminderUnit.addItem(u"小时*")
@@ -738,12 +1041,21 @@ class Add(QDialog):  # 新建事项窗口
         self.comboReminderUnit.hide()
         self.comboReminder.currentIndexChanged.connect(self.diffUnit)
 
-        self.buttonSon = QPushButton(u'创建子事件')
+        self.buttonSon = QPushButton()
         self.buttonSon.clicked.connect(self.newSubWindow)
-        self.buttonSon.setMaximumWidth(70)
+        self.buttonSon.setFixedSize(75, 20)
+        self.buttonSon.setStyleSheet("QPushButton{border-image:url(./pic/createson.png)}""QPushButton:hover{border-image:url(./pic/createson-hover.png)}")
         self.sonIDList = []  # 请改掉这一句
         self.sonID = 0
 
+        self.btnClose = QPushButton()
+        self.btnClose.setFixedSize(15, 15)
+
+        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.clicked.connect(self.close)
+
+        self.topBarLayout = QHBoxLayout()
+        self.topBarLayout.addWidget(self.btnClose, 0, Qt.AlignRight | Qt.AlignTop)
         self.topLayout.addWidget(lblTitle, 0, 0)
         self.topLayout.addWidget(self.editTitle, 0, 1, 1, 5)
         self.topLayout.addWidget(lblStart, 1, 0)
@@ -770,9 +1082,15 @@ class Add(QDialog):  # 新建事项窗口
         self.topLayout.addWidget(self.comboReminder, 6, 1)
 
         lblTag = QLabel(u'标签')
-        #lblTag.setMaximumWidth(1000)
-        buttonAddTag = QPushButton(u'添加')
-        # buttonAddTag.setMaximumWidth(150)
+        lblTag.setFont(font)
+        lblTag.setStyleSheet("color:white")
+        # lblTag.setMaximumWidth(1000)
+        lblTag.setFixedSize(70,20)
+        btnAddTag = QPushButton()
+
+        btnAddTag.setFixedSize(75, 20)
+        btnAddTag.setStyleSheet("QPushButton{border-image:url(./pic/add.png)}""QPushButton:hover{border-image:url(./pic/add-hover.png)}")
+        # btnAddTag.setMaximumWidth(150)
         self.numOfClicked = 0
 
         tagA = QLineEdit()
@@ -781,43 +1099,60 @@ class Add(QDialog):  # 新建事项窗口
         tagD = QLineEdit()
         tagE = QLineEdit()
         self.tagGroup = [tagA, tagB, tagC, tagD, tagE]
-        buttonAddTag.clicked.connect(self.AddTag)
+        btnAddTag.clicked.connect(self.AddTag)
         for i in range(5):
             self.tagGroup[i].setEnabled(False)
+            #self.tagGroup[i].setStyleSheet("background-color:red")
             self.tagGroup[i].setMaximumWidth(90)
             self.bottomLayout.addWidget(self.tagGroup[i], 0, i + 1)
-        buttonDeleteTag = QPushButton(u'删除')
-        # buttonDeleteTag.setMaximumWidth(91)
+        btnDeleteTag = QPushButton()
+        btnDeleteTag.setFixedSize(75, 20)
+        btnDeleteTag.setStyleSheet("QPushButton{border-image:url(./pic/delete.png)}""QPushButton:hover{border-image:url(./pic/delete-hover.png)}")
 
-        buttonDeleteTag.clicked.connect(self.DeleteTag)
-        self.bottomLayout.addWidget(buttonAddTag, 1, 1)
-        self.bottomLayout.addWidget(buttonDeleteTag, 1, 2)
-        buttonAddTag.setMaximumWidth(70)
-        buttonDeleteTag.setMaximumWidth(70)
+        btnDeleteTag.clicked.connect(self.DeleteTag)
+        self.bottomLayout.addWidget(btnAddTag, 1, 1)
+        self.bottomLayout.addWidget(btnDeleteTag, 1, 2)
+        btnAddTag.setMaximumWidth(70)
+        btnDeleteTag.setMaximumWidth(70)
         self.bottomLayout.addWidget(lblTag, 0, 0)
         # lblTag.setMaximumWidth(90)
 
+        # self.topLayout.setMargin(10)
 
-
+        # self.bottomLayout.setMargin(10)
         self.mainLayout = QGridLayout(self)
+        # self.mainLayout.setMargin(20)
+        self.mainLayout.setContentsMargins(17, 13, 22, 17)
+
         # self.mainLayout.setMargin(150)
         # self.bottomLayout.setMargin(50)
         # self.mainLayout.setColumnStretch(1, 20)
-        self.mainLayout.addLayout(self.topLayout, 0, 0)
-        self.mainLayout.addLayout(self.bottomLayout, 1, 0)
+        self.mainLayout.addLayout(self.topBarLayout, 0, 0)
+        self.mainLayout.addLayout(self.topLayout, 1, 0)
+        self.mainLayout.addLayout(self.bottomLayout, 2, 0)
 
-        buttonsOkCancel = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, self)
-        buttonsOkCancel.accepted.connect(self.Check)
-        buttonsOkCancel.rejected.connect(self.reject)
 
+        btnYes = QPushButton()
+        btnYes.setFixedSize(75, 20)
+        btnYes.setStyleSheet("QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
+        btnYes.clicked.connect(self.accept)
+
+        btnNo = QPushButton()
+        btnNo.setFixedSize(75, 20)
+        btnNo.setStyleSheet("QPushButton{border-image:url(./pic/no.png)}""QPushButton:hover{border-image:url(./pic/no-hover.png)}")
+        btnNo.clicked.connect(self.reject)
 
         # buttonsOkCancel.setMaximumWidth(50)
-        # self.bottomLayout.addWidget(QSpacerItem, 2, 0)
-        self.bottomLayout.addWidget(buttonsOkCancel, 3, 4, 1, 2)
-        self.bottomLayout.addWidget(self.buttonSon, 3, 0)
 
+        #self.bottomLayout.setColumnStretch(3, 1)
+        self.boboLayout = QHBoxLayout()
+
+
+        self.boboLayout.addWidget(self.buttonSon, 0)
+        self.boboLayout.addStretch(1)
+        self.boboLayout.addWidget(btnYes)
+        self.boboLayout.addWidget(btnNo)
+        self.mainLayout.addLayout(self.boboLayout, 3, 0)
 
         # self.bottomLayout.addWidget(buttonsOkCancel, 10, 2)
 
@@ -827,72 +1162,168 @@ class Add(QDialog):  # 新建事项窗口
         self.mainLayout.setColumnStretch(1, 20)
         self.mainLayout.addLayout(self.topLayout, 0, 0)'''
 
+
+class deleteItem(QDialog):
+    def __init__(self):
+        super(deleteItem, self).__init__()
+        self.initLayout()
+        self.setModal(True)
+        self.setFixedSize(210, 100)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.background = QPixmap()
+
+        self.background.load("./pic/othertag.png")
+
+        self.flag = 0
+
+        self.show()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 210, 100, self.background)
+
+    def initLayout(self):
+        self.layout = QVBoxLayout(self)
+        self.lblInfo = QLabel(u'  您确定要删除该事项吗？')
+        self.lblInfo.setAlignment(Qt.AlignVCenter)
+        self.lblInfo.setFont(getfont())
+        self.setStyleSheet('color:white')
+
+        self.layout.addWidget(self.lblInfo)
+
+        # buttonsOkCancel = QDialogButtonBox(
+        #    QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+        #    Qt.Horizontal, self)
+        # buttonsOkCancel.accepted.connect(self.accept)
+        # buttonsOkCancel.rejected.connect(self.reject)
+        btnYes = QPushButton()
+        btnYes.setFixedSize(75, 20)
+        btnYes.setStyleSheet(
+            "QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
+        btnYes.clicked.connect(self.accept)
+
+        btnNo = QPushButton()
+        btnNo.setFixedSize(75, 20)
+        btnNo.setStyleSheet(
+            "QPushButton{border-image:url(./pic/no.png)}""QPushButton:hover{border-image:url(./pic/no-hover.png)}")
+        btnNo.clicked.connect(self.reject)
+
+        # buttonsOkCancel.setMaximumWidth(50)
+
+        # self.bottomLayout.setColumnStretch(3, 1)
+        self.boboLayout = QHBoxLayout()
+
+        # self.boboLayout.addStretch(1)
+        self.boboLayout.addWidget(btnYes)
+        self.boboLayout.addWidget(btnNo)
+        self.layout.addLayout(self.boboLayout)
+
+
 class Show(Add):
     def __init__(self, id):
         super(Show, self).__init__()
         self.setWindowTitle(u"详细信息")
         self.id = str(id)
-        #print self.id
-        self.btnDelete = QPushButton(u'删除')
+        # print self.id
+        self.flag = 0
+        self.deleteflag = 0
+        self.btnDelete = QPushButton()
         self.btnDelete.clicked.connect(self.DeleteItem)
-        self.bottomLayout.addWidget(self.btnDelete, 3, 3)
+        self.boboLayout.insertWidget(2, self.btnDelete)
+
+        self.btnDelete.setFixedSize(75, 20)
+        self.btnDelete.setStyleSheet(
+            "QPushButton{border-image:url(./pic/delete.png)}""QPushButton:hover{border-image:url(./pic/delete-hover.png)}")
+
         self.showInfo(details(self.id))
-        self.buttonSon.setText(u"显示子事件")
-        if self.sonIDList =="":
-            self.buttonSon.setEnabled(False)
+        self.buttonSon.hide()
+
+        self.btnSonNew = QPushButton()
+        self.btnSonNew.clicked.connect(self.tw)
+        self.btnSonNew.setFixedSize(75, 20)
+        self.btnSonNew.setStyleSheet("QPushButton{border-image:url(./pic/showson.png)}""QPushButton:hover{border-image:url(./pic/showson-hover.png)}")
+
+        self.boboLayout.insertWidget(0, self.btnSonNew)
+        #print self.sonIDList
+        if len(self.sonIDList) == 1:
+            self.btnSonNew.hide()
+            self.btnSonNew.setEnabled(False)
+
+    def tw(self):
+        self.flag = 1
+        self.accept()
 
     def newSubWindow(self):
         self.accept()
-    def test(self):
-        print "here"
 
     def DeleteItem(self):
 
-        reply = QMessageBox.question(self, u'警告', u'你确定要删除该事项吗', QMessageBox.Yes |
-                                               QMessageBox.No, QMessageBox.No)
-
+        # reply = QMessageBox.question(self, u'警告', u'你确定要删除该事项吗', QMessageBox.Yes |
+        #                                   QMessageBox.No, QMessageBox.No)
+        a = deleteItem()
+        if a.exec_():
+            remove(self.id)
+            self.deleteflag = 1
+            self.accept()
+            return
+        #reply = QMessageBox.question(self, u'警告', u'你确定要删除该事项吗', QMessageBox.Yes |
+          #                           QMessageBox.No, QMessageBox.No)
+        '''
         if reply == QMessageBox.Yes:
             remove(self.id)
             self.accept()
         else:
-            self.acceptDrops()
+            self.acceptDrops()'''
 
     def showInfo(self, infoList):
-        print infoList
-        if len(infoList) == 17:
-            id, title, loc, startTime, endTime, reminder, reminderUnit, \
-        reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-        checkBoxGroup, sonID, note  = infoList
-            self.sonIDList = ""
-        elif len(infoList) ==18:
+        # print infoList
+        '''if len(infoList) == 17:
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
             reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-            checkBoxGroup, sonID, sonIDList, note = infoList
-            self.sonIDList = sonIDList[:-1].split(",")
+            checkBoxGroup, sonID, note = infoList
+            self.sonIDList = ""
+        elif len(infoList) == 18:'''
+        id, title, loc, startTime, endTime, reminder, reminderUnit, \
+        reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+        checkBoxGroup, sonID, sonIDList, note = infoList
+        self.sonIDList = sonIDList[:-1].split(",")
+        print infoList
         self.id = id
 
-        #self.currentDate = startTime.split()[0]
+        # self.currentDate = startTime.split()[0]
         self.repeatInfo = []
         self.repeatInfo.extend([comboUnit, frequency, radioSelected, endTimes, \
-                                   endDate, checkBoxGroup])
+                                endDate, checkBoxGroup])
 
         if title != 'None':
             self.editTitle.setText(unicode(title))
         if loc != 'None':
             self.editLoc.setText(unicode(loc))
-        self.editStartDate.setText(startTime.split()[0])
+
+        table = {'0': u'周日', '1': u'周一', '2': u'周二', '3': u'周三', '4': u'周四', '5': u'周五', '6': u'周六'}
+        r_table = {u'周日': 6, u'周一': 0, u'周二': 1, u'周三': 2, u'周四': 3, u'周五': 4, u'周六': 5}
+        #print startTime
+        year, month, day = [int (startTime.split()[0].split('-')[i]) for i in range(3)]
+        date = table[datetime(year, month, day).strftime("%w")] + ' ' + str(month) + u'月' + ' ' + str(day) + ' ' + str(year)
+        #startTime.split()[0]
+        #self.date = table[dates[-1]] + ' ' + dates[1] + u'月' + ' ' + dates[2] + ' ' + dates[0]
+        #self.weekday = int(dates[-1]) - 1
+
+        self.editStartDate.setText(date)
         self.editStartHour.setText(startTime.split()[1])
         self.editStartMinute.setText(startTime.split()[2])
-        self.editEndDate.setText(endTime.split()[0])
+        self.editEndDate.setText(date)
         self.editEndHour.setText(endTime.split()[1])
         self.editEndMinute.setText(endTime.split()[2])
         if note != 'None':
             self.editNote.setText(unicode(note))
         self.comboReminder.setCurrentIndex(int(reminder))
-        #print reminder
+        # print reminder
         self.comboReminderUnit.setCurrentIndex(int(reminderUnit))
-        #print reminderNumber
-        if reminderNumber != 'None' or int(reminderNumber) >0:
+        # print reminderNumber
+        if reminderNumber != 'None' or int(reminderNumber) > 0:
             self.editReminderTime.setText(reminderNumber)
         else:
             self.editReminderTime.setText('22')
@@ -902,16 +1333,18 @@ class Show(Add):
             if tags[i] != '':
                 self.tagGroup[i].setText(unicode(tags[i]))
                 self.tagGroup[i].setEnabled(True)
-        #self.repeatInfo.extend([comboUnit, frequency, radioSelected, endTimes, endDate, checkBoxGroup])
+                # self.repeatInfo.extend([comboUnit, frequency, radioSelected, endTimes, endDate, checkBoxGroup])
 
     def Repeat(self):  # 新建重复窗口
-        repeatWindow = RepeatWindow()
-        #self.repeatParameters = []
+
+        repeatWindow = RepeatWindow(self.weekday)
+
+        # self.repeatParameters = []
         repeatWindow.comboUnit.setCurrentIndex(int(self.repeatInfo[0]))
         if self.repeatInfo[1] != '-1':
             repeatWindow.editFre.setText(self.repeatInfo[1])
         radioInfo = tranBoolList(self.repeatInfo[2])
-        print radioInfo
+        # print radioInfo
         if radioInfo[0] == '1':
             repeatWindow.radioNever.setChecked(True)
         elif radioInfo[1] == '1':
@@ -931,52 +1364,90 @@ class Show(Add):
             return
 
 
-
-
 def newDDL(self):
     addWindow = DDL()
     if addWindow.exec_():
         return
+
 
 class otherTag(QDialog):
     def __init__(self):
         super(otherTag, self).__init__()
         self.initLayout()
         self.setWindowTitle(u'其他标签')
+        self.setFixedSize(210, 100)
+        self.setModal(True)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.background = QPixmap()
+        self.background.load("./pic/othertag.png")
+
         self.show()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 210, 100, self.background)
+
     def initLayout(self):
         self.layout = QVBoxLayout(self)
         self.lblInfo = QLabel(u'请输入希望查找的标签：')
+        self.lblInfo.setFont(getfont())
+        self.lblInfo.setStyleSheet('color:white')
         self.edit = QLineEdit()
         self.layout.addWidget(self.lblInfo)
         self.layout.addWidget(self.edit)
-        #buttonsOkCancel = QDialogButtonBox(
+        # buttonsOkCancel = QDialogButtonBox(
         #    QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
         #    Qt.Horizontal, self)
-        #buttonsOkCancel.accepted.connect(self.accept)
-        #buttonsOkCancel.rejected.connect(self.reject)
-        self.btnYes = QPushButton(u'确定')
-        self.layout.addWidget(self.btnYes)
-        self.btnYes.clicked.connect(self.check)
+        # buttonsOkCancel.accepted.connect(self.accept)
+        # buttonsOkCancel.rejected.connect(self.reject)
+        btnYes = QPushButton()
+        btnYes.setFixedSize(75, 20)
+        btnYes.setStyleSheet(
+            "QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
+        btnYes.clicked.connect(self.check)
+
+        btnNo = QPushButton()
+        btnNo.setFixedSize(75, 20)
+        btnNo.setStyleSheet(
+            "QPushButton{border-image:url(./pic/no.png)}""QPushButton:hover{border-image:url(./pic/no-hover.png)}")
+        btnNo.clicked.connect(self.reject)
+
+        # buttonsOkCancel.setMaximumWidth(50)
+
+        # self.bottomLayout.setColumnStretch(3, 1)
+        self.boboLayout = QHBoxLayout()
+
+        #self.boboLayout.addStretch(1)
+        self.boboLayout.addWidget(btnYes)
+        self.boboLayout.addWidget(btnNo)
+        self.layout.addLayout(self.boboLayout)
+
     def check(self):
         tag = self.edit.text()
         tagList = getTagList()
-        #print unicode(tagList[0]), unicode(tagList[1])
-        #print tag
+        # print unicode(tagList[0]), unicode(tagList[1])
+        # print tag
         if unicode(tag) in tagList:
             self.accept()
             self.tag = tag
         else:
-            QMessageBox.warning(self, u'警告', u'无包含此标签的事项',
-                                QMessageBox.Yes, QMessageBox.Yes)
+            warn = Warn('无含此标签的事项')
+            if warn.exec_():
+                return
 
 
 class multiItem(QDialog):
     def __init__(self, IDs):
         super(multiItem, self).__init__()
         self.IDs = IDs
-
+        self.setWindowFlags(Qt.FramelessWindowHint)
         self.initLayout()
+        pal = QPalette()
+
+        pal.setColor(self.backgroundRole(), QColor(55, 62, 150))
+        self.setPalette(pal)
         self.show()
 
     def showDetail(self, id):
@@ -986,26 +1457,159 @@ class multiItem(QDialog):
             print "经过"
             self.accept()
             return
+
     def initLayout(self):
         self.layout = QVBoxLayout(self)
-        self.layout.setSpacing(20)
+        self.layout.setSpacing(10)
+        #self.layout.addWidget(self.btnClose)
+        self.btnClose = QPushButton()
+        self.btnClose.setFixedSize(15, 15)
+
+        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.clicked.connect(self.close)
+        self.topBarLayout = QHBoxLayout()
+        self.topBarLayout.addWidget(self.btnClose, 0, Qt.AlignRight | Qt.AlignTop)
+        self.layout.addLayout(self.topBarLayout)
+
         currentItem = details(self.IDs[0])
         date = transDate(currentItem[3].split()[0])
         lblDate = QLabel(unicode(date))
         self.layout.addWidget(lblDate)
+        lblDate.setFont(getfont())
+        lblDate.setStyleSheet('color:white')
+
+
+
         btnNames = []
         for i in range(len(self.IDs)):
             btnNames.append('btnItem' + str(i))
         for i in range(len(self.IDs)):
-            #print str(self.IDs[i])
+            # print str(self.IDs[i])
             currentItem = details(str(self.IDs[i]))
-            #print currentItem
+            # print currentItem
             id = currentItem[0]
-            #print id
+            # print id
             name = currentItem[1]
             btnNames[i] = QPushButton(unicode(name))
+            btnNames[i].setStyleSheet('background-color:white')
+            #btnNames[i].setColor(QColor(255, 255, 255))
+            btnNames[i].setFont(getfont())
             btnNames[i].clicked.connect(partial(self.showDetail, id))
             self.layout.addWidget(btnNames[i])
+
+
+class UpdateWindow(QDialog):
+    def __init__(self):
+        super(UpdateWindow, self).__init__()
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setFixedSize(230, 160)
+        self.initLayout()
+        self.background = QPixmap()
+        self.background.load("./pic/updatewindow.png")
+
+        # self.setFixedSize(self.width(), self.height())
+        self.show()
+
+        # def DropSha
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 230, 160, self.background)
+
+
+    def initLayout(self):
+        self.layout = QGridLayout(self)
+        self.lblUsername = QLabel(u'用户名*')
+        self.lblUsername.setFont(getfont())
+        self.lblUsername.setStyleSheet("color:white")
+        self.lblEmail = QLabel(u'邮箱*')
+        self.lblEmail.setStyleSheet("color:white")
+        self.lblEmail.setFont(getfont())
+        self.lblUsername.setFont(getfont())
+        self.lblPassword = QLabel(u'密码*')
+        self.lblPassword.setStyleSheet("color:white")
+        self.lblPassword.setFont(getfont())
+        self.editUsername = QLineEdit()
+        self.editPassword = QLineEdit()
+        self.editPassword.setEchoMode(QLineEdit.Password)
+        self.editPassword.setMaxLength(30)
+        self.editMail = QLineEdit()
+        '''self.lblRem = QLabel(u'记住我')
+        self.lblRem.setFont(getfont())
+        self.lblRem.setStyleSheet("color:white")
+        self.checkRem = QCheckBox()'''
+        self.layout.addWidget(self.lblUsername, 1, 0)
+        self.layout.addWidget(self.lblPassword, 2, 0)
+        self.layout.addWidget(self.lblEmail, 3, 0)
+        #self.layout.addWidget(self.lblRem, 4, 0)
+        self.layout.addWidget(self.editUsername, 1, 1)
+        self.layout.addWidget(self.editPassword, 2, 1)
+        self.layout.addWidget(self.editMail, 3, 1)
+        #self.layout.addWidget(self.checkRem, 4, 1)
+        self.bottomLayout = QHBoxLayout()
+        self.bottomLayout.addStretch(1)
+        self.layout.addLayout(self.bottomLayout, 4, 1)
+
+        #self.btnYes = QPushButton(u'同步')
+
+        #self.btnYes.clicked.connect(self.Accept)
+        #self.btnNo.clicked.connect(self.reject)
+
+        btnYes = QPushButton()
+        btnYes.setFixedSize(75, 20)
+        btnYes.setStyleSheet(
+            "QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
+        btnYes.clicked.connect(self.Accept)
+
+        btnNo = QPushButton()
+        btnNo.setFixedSize(75, 20)
+        btnNo.setStyleSheet(
+            "QPushButton{border-image:url(./pic/no.png)}""QPushButton:hover{border-image:url(./pic/no-hover.png)}")
+        btnNo.clicked.connect(self.reject)
+        self.bottomLayout.addWidget(btnYes)
+        # self.btnNo = QPushButton(u'取消')
+        self.bottomLayout.addWidget(btnNo)
+
+
+        try:
+            f = open('./data/user.csv', 'r')
+            info = f.readline()
+            username, password, mail = info.split('\t')
+            self.editUsername.setText(username)
+            self.editPassword.setText(password)
+            self.editMail.setText(mail)
+            f.close()
+        except:
+            pass
+
+    def Accept(self):
+
+        username = unicode(self.editUsername.text())
+        password = unicode(self.editPassword.text())
+        #print password
+        #print [username, password]
+        email = self.editMail.text()
+        str = r'^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}$'
+
+        if not re.match(str, email):
+            warn = Warn('请输入正确的邮箱')
+            if warn.exec_():
+                return
+            self.acceptDrops()
+        else:
+            info = sync.main(username, password)
+            print info
+            if info == '!!!':
+                warn = Warn('用户名或密码错误')
+                if warn.exec_():
+                    return
+            else:
+                f = open('./data/user.csv', 'w')
+                f.write(username + '\t' + password + '\t' + email)
+                f.close()
+        self.accept()
 
 
 class trayIcon(QSystemTrayIcon):
@@ -1043,10 +1647,11 @@ class trayIcon(QSystemTrayIcon):
         self.tray_menu.addAction(self.QuitAction)
         #self.tray_menu.addAction(self.showAction1 )
         self.setContextMenu(self.tray_menu) #设置系统托盘菜单
+        self.showMessage(u"测试", u"我是消息")
 
     def showM(self):
         titleList=(u'我的DDL是01',u'我的DDL是02',u'我的DDL是03',u'我的DDL是58',u'我的DDL是59',u'我的DDL是60')
-        endDateList = (str('2017-12-23 15:01'),str('2017-12-23 15:02'),str('2017-12-23 15:03'),str('2017-12-23 14:58'),str('2017-12-23 14:59'),str('2017-12-23 15:00'))
+        endDateList = (str('2017-12-24 17:10'), str('2017-12-24 17:11'), str('2017-12-24 17:12'), str('2017-12-24 17:13'), str('2017-12-24 17:14'), str('2017-12-24 17:15'))
         remindTimeList =(30,30,30,30,30,30)#单位是分钟
         self.timenow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
         self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M')
@@ -1058,9 +1663,9 @@ class trayIcon(QSystemTrayIcon):
             timeddl = time.strptime(endDateList[i],'%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
             timeLeftStampTemp = timeDDL-self.timeStamp
-            print(timeLeftStampTemp)
-            if(timeLeftStampTemp==remindTimeList[i]*60):
 
+            if(timeLeftStampTemp==remindTimeList[i]*60):
+                print(timeLeftStampTemp)
                 message=u'【 '+titleList[i]+u'】 '+u"距离截止时间还有"+str(remindTimeList[i])+u"分钟！"
                 self.showMessage(u"提醒", message)
 
@@ -1075,8 +1680,24 @@ class trayIcon(QSystemTrayIcon):
 
         if reason ==1 :
             self.tray_menu.show()
-            #self.showMessage(u"测试", u"我是消息")
+            self.showMessage(u"测试", u"我是消息")
 
+class white(QWidget):
+    def __init__(self):
+        super(white, self).__init__()
+
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
+        # .setModal(True)
+        # self.initLayout()
+        self.setFixedSize(520, 520)
+        self.show()
+        # self.SHADOW_WIDTH = 8
+        pal = QPalette()
+
+        pal.setColor(self.backgroundRole(), QColor(255, 255, 255))
+        self.setPalette(pal)
 
 
 class Talendar(QWidget):  # 主界面
@@ -1088,27 +1709,26 @@ class Talendar(QWidget):  # 主界面
         self.targetTag = None
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
         self.setWindowTitle("Talendar")
-        self.date=datetime.now()
-        self.rowNum=24
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.date = datetime.now()
+        self.rowNum = 24
+        self.starttime=1
         self.filterFlag = 0
-        self.ti = trayIcon(self)
-        self.ti.show()
+        #self.ti = trayIcon(self)
+        #self.ti.show()
+        # self.setWindowFlags(Qt.CustomizeWindowHint)
 
-        #self.setWindowFlags(Qt.CustomizeWindowHint)
-
-        #self.resize(695, 500)
-        self.resize(880, 600)
-        #self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
+        # self.resize(695, 500)
+        self.resize(920, 620)
+        # self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
         self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
-        self.pageFlag='w'
+        self.pageFlag = 'm'
         self.initGrid()
-        self.icon = QIcon("./pic/logo-square-64.png")
-        self.setWindowIcon(self.icon)
 
-        pal = QPalette()
-
+        '''pal = QPalette()
         pal.setColor(self.backgroundRole(), QColor(55, 62, 150))
-        self.setPalette(pal)
+        self.setPalette(pal)'''
 
         self.timer = QTimer(self)
         self.count = 0
@@ -1116,23 +1736,23 @@ class Talendar(QWidget):  # 主界面
         self.timer.timeout.connect(self.updateDDL)
         self.startCount()
 
+        self.background = QPixmap()
+        self.background.load("./pic/mainwindow.png")
 
-    def closeEvent(self, event):
-        reply =QMessageBox.question(self, u'警告', u'是否最小化到托盘？',
-                                           QMessageBox.Yes, QMessageBox.No)
-        if reply ==QMessageBox.Yes:
-            event.ignore()
-            self.hide()
-        else:
-            event.accept()
+        # self.setFixedSize(self.width(), self.height())
+        self.show()
+
+    # def DropSha
 
 
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 920, 620, self.background)
 
     def startCount(self):
         self.timer.start(60000)
-
-
-
 
     def initFolder(self):
         root_directory = ''
@@ -1145,15 +1765,15 @@ class Talendar(QWidget):  # 主界面
         except OSError:
             pass
         try:
-            os.mkdir(root_directory + folder_data+ '/' + folder_root)
+            os.mkdir(root_directory + folder_data + '/' + folder_root)
         except OSError:
             pass
         try:
-            os.mkdir(root_directory + folder_data+ '/' + folder_list)
+            os.mkdir(root_directory + folder_data + '/' + folder_list)
         except OSError:
             pass
         try:
-            os.mkdir(root_directory + folder_data+ '/' + folder_note)
+            os.mkdir(root_directory + folder_data + '/' + folder_note)
         except OSError:
             pass
         if not os.path.isfile(r"data/root/0_time_routine_ls"):
@@ -1170,8 +1790,10 @@ class Talendar(QWidget):  # 主界面
         pass
 
     def update(self):
-        classes = get_class("sheet.xls")
 
+
+        '''classes = get_class("sheet.xls")
+        #sync.main()
         for cla in classes:
             title, loc, startTime, endTime, _, _, tags, \
             repeatUnit, repeatFre, radioSelected, endTimes, endDate, checkBoxGroup, note = cla
@@ -1198,7 +1820,7 @@ class Talendar(QWidget):  # 主界面
             f_sonIDlist.write(str(last_num + 1) + '\n')
             f_sonIDlist.close()
             f = open(r"data/list/new", 'w')
-            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-1-1', '\n',
+            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
                     '[False, False, False, False, False, False, False]', '\n']
             f.writelines(list)
             f.close()
@@ -1279,71 +1901,89 @@ class Talendar(QWidget):  # 主界面
             # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
             # print repeatInfo
             f_time_routine.close()
-        QMessageBox.information(self, u'提示', u'同步完成',
-                            QMessageBox.Yes, QMessageBox.Yes)
+        warn = Warn('同步完成')
+        if warn.exec_():
+            return'''
+        updatewindow = UpdateWindow()
+        if updatewindow.exec_():
+            '''username = updatewindow.editUsername.text()
+            password = updatewindow.editPassword.text()
+            email = updatewindow.editEmail.text()
+            f = open('./data/user.csv', 'w')
+            f.write(username + '\t' + password + '\t' + email)
+            f.close()'''
+            return
 
 
     def initGrid(self):
 
-
-
         self.initLeftGrid()  # 初始化左侧菜单栏
         self.initCalendarGrid()  # 初始化右侧日历表格界面
         self.initTopGrid()
-        self.initMainGrid() # 构建主布局
-        #self.initTuoPan()
+        self.initMainGrid()  # 构建主布局
 
-        #self.addNewEvent(3,2,1,u'test')
-	
+        # self.addNewEvent(3,2,1,u'test')
 
-    def initTopGrid(self):#updated
-        self.topLayout=QHBoxLayout()
-        
-        self.year=QLabel(self.date.strftime("%Y"))
-        #self.topLayout.addWidget(self.year)
-        self.topLayout.addStretch(1)
+    def initTopGrid(self):  # updated
+        self.topLayout = QHBoxLayout()
+
+        self.year = QLabel(self.date.strftime("%Y"))
+        # self.topLayout.addWidget(self.year)
+
         upperPage = QPushButton()
-        upperPage.setFixedSize(21, 33)
+        upperPage.setFixedSize(15, 25)
         upperPage.setStyleSheet("border-image:url(./pic/forward.png)")
         self.topLayout.addWidget(upperPage)
         upperPage.clicked.connect(self.upPage)
         nextPage = QPushButton()
         self.topLayout.addWidget(nextPage)
-        nextPage.setFixedSize(21, 33)
+        self.topLayout.addStretch(1)
+        self.btnClose = QPushButton()
+        self.btnClose.setFixedSize(25, 25)
+
+        self.btnClose.setStyleSheet("border-image:url(./pic/close_big.png)")
+        self.btnClose.clicked.connect(self.close)
+        self.topLayout.addWidget(self.btnClose)
+        self.topLayout.setSpacing(15)
+        self.topLayout.setContentsMargins(0, 12, 10, 5)
+        nextPage.setFixedSize(15, 25)
 
         nextPage.setStyleSheet("border-image:url(./pic/next.png)")
         nextPage.clicked.connect(self.nextPage)
 
     def initMainGrid(self):
+
         self.mainLayout = QGridLayout(self)
 
-        self.mainLayout.setSpacing(20)
-        self.mainLayout.setRowStretch(0,10)
-        self.mainLayout.setRowStretch(1,1)
-        self.mainLayout.setRowMinimumHeight(1,0)
-        
-
+        self.leftLayout.setSpacing(20)
+        self.leftLayout.setMargin(13)
+        self.mainLayout.setRowStretch(0, 10)
+        self.mainLayout.setRowStretch(1, 1)
+        self.mainLayout.setRowMinimumHeight(1, 0)
 
         self.mainLayout.addLayout(self.leftLayout, 0, 0)
 
-        self.tempLayout=QVBoxLayout()
-        #self.tempLayout.sizeHint(500)
-
+        self.tempLayout = QVBoxLayout()
+        # self.tempLayout.sizeHint(500)
         self.tempLayout.addLayout(self.topLayout)
         self.tempLayout.addLayout(self.calendarLayout)
-        #self.mainLayout.addLayout(self.calendarLayout, 1, 1 )
-        #self.mainLayout.addLayout(self.topLayout,0,1)
-        #self.topLayout.setMaximumWidth(20)
-        self.mainLayout.addLayout(self.tempLayout,0,1)
+        # self.mainLayout.addLayout(self.calendarLayout, 1, 1 )
+        # self.mainLayout.addLayout(self.topLayout,0,1)
+        # self.topLayout.setMaximumWidth(20)
+        self.mainLayout.addLayout(self.tempLayout, 0, 1)
+
     def targetCourse(self):
         self.targetTag = '课程'
         self.refresh()
+
     def targetHomework(self):
         self.targetTag = '作业'
         self.refresh()
+
     def targetConf(self):
         self.targetTag = '活动/会议'
         self.refresh()
+
     def targetOther(self):
         otherTagWindow = otherTag()
         if otherTagWindow.exec_():
@@ -1351,10 +1991,10 @@ class Talendar(QWidget):  # 主界面
             self.refresh()
             return
 
-    #def targetCourse(self):
+    # def targetCourse(self):
     #    self.targetTag = ''
     def showFilter(self):
-        #self.ckCourse = QCheckBox()
+        # self.ckCourse = QCheckBox()
         if self.filterFlag == 0:
             self.btnCourse.show()
             self.btnHomework.show()
@@ -1369,65 +2009,66 @@ class Talendar(QWidget):  # 主界面
             self.refresh()
         self.filterFlag = 1 - self.filterFlag
 
-
-
-
-
-
-
     def initLeftGrid(self):
         self.leftLayout = QVBoxLayout()
         # self.leftLayout.setMargin(10)
 
-        #btnIcon = QPushButton()
-        #btnIcon.setFixedSize(48, 10)
-        #btnIcon.setStyleSheet("border-image:url(./pic/title.png)")
-        #self.leftLayout.addWidget(btnIcon)
+        # btnIcon = QPushButton()
+        # btnIcon.setFixedSize(48, 10)
+        # btnIcon.setStyleSheet("border-image:url(./pic/title.png)")
+        # self.leftLayout.addWidget(btnIcon)
 
         topSpace = QSpacerItem(1, 80)
         self.leftLayout.addItem(topSpace)
         btnUpdate = QPushButton()
-        btnUpdate.setFixedSize(76, 20)
-        btnUpdate.setStyleSheet("border-image:url(./pic/update.png)")
+        btnUpdate.setFixedSize(75, 28)
+        #btnUpdate.setStyleSheet("border-image:url(./pic/update.png);")
+        btnUpdate.setStyleSheet("QPushButton{border-image:url(./pic/update.png)}""QPushButton:hover{border-image:url(./pic/update-hover.png)}")
+        #btnUpdate.setStyleSheet("hover{border-image:url(./pic/update-hover.png)}") "QPushbutton:hover{border-image:url(./pic/update-hover.png)}"
         btnUpdate.clicked.connect(self.update)
         self.leftLayout.addWidget(btnUpdate)
         btnNew = QPushButton()
         self.leftLayout.addWidget(btnNew)
-        btnNew.setFixedSize(77, 28)
-        btnNew.setStyleSheet("border-image:url(./pic/new.png)")
+        btnNew.setFixedSize(75, 28)
+        btnNew.setStyleSheet("QPushButton{border-image:url(./pic/new.png)}""QPushButton:hover{border-image:url(./pic/new-hover.png)}")
         btnNew.clicked.connect(self.newWindow)
 
         self.btnFilter = QPushButton()
         self.leftLayout.addWidget(self.btnFilter)
-        self.btnFilter.setFixedSize(81, 29)
-        self.btnFilter.setStyleSheet("border-image:url(./pic/ddl.png)")
+        self.btnFilter.setFixedSize(75, 28)
+        self.btnFilter.setStyleSheet("QPushButton{border-image:url(./pic/filter.png)}""QPushButton:hover{border-image:url(./pic/filter-hover.png)}")
         self.btnFilter.clicked.connect(self.showFilter)
 
         btnDDL = QPushButton()
         self.leftLayout.addWidget(btnDDL)
-        btnDDL.setFixedSize(81, 29)
-        btnDDL.setStyleSheet("border-image:url(./pic/ddl.png)")
+        btnDDL.setFixedSize(75, 28)
+        btnDDL.setStyleSheet("QPushButton{border-image:url(./pic/ddl.png)}""QPushButton:hover{border-image:url(./pic/ddl-hover.png)}")
 
         change = QPushButton()
         change.clicked.connect(self.Transform)
-        change.setFixedSize(74, 27)
-        change.setStyleSheet("border-image:url(./pic/screen.png)")
+        change.setFixedSize(75, 28)
+        change.setStyleSheet("QPushButton{border-image:url(./pic/screen.png)}""QPushButton:hover{border-image:url(./pic/screen-hover.png)}")
         self.leftLayout.addWidget(change)
         btnSetting = QPushButton()
         self.leftLayout.addWidget(btnSetting)
         btnSetting.setFixedSize(75, 28)
-        btnSetting.setStyleSheet("border-image:url(./pic/settings.png)")
-
+        btnSetting.setStyleSheet("QPushButton{border-image:url(./pic/settings.png)}""QPushButton:hover{border-image:url(./pic/settings-hover.png)}")
 
         btnDDL.clicked.connect(self.showDDL)
 
-        self.btnCourse = QPushButton(u'课程')
-        # self.ckHomework = QCheckBox()
-        self.btnHomework = QPushButton(u'作业')
-        # self.ckConf = QCheckBox()
-        self.btnConf = QPushButton(u'活动/会议')
+        self.btnCourse = QPushButton()
+        self.btnCourse.setFixedSize(75, 20)
+        self.btnCourse.setStyleSheet("QPushButton{border-image:url(./pic/sub-course.png)}""QPushButton:hover{border-image:url(./pic/sub-course-hover.png)}")
+        self.btnHomework = QPushButton()
+        self.btnHomework.setFixedSize(75, 20)
+        self.btnHomework.setStyleSheet("QPushButton{border-image:url(./pic/sub-homework.png)}""QPushButton:hover{border-image:url(./pic/sub-homework-hover.png)}")
+        self.btnConf = QPushButton()
+        self.btnConf.setFixedSize(75, 20)
+        self.btnConf.setStyleSheet("QPushButton{border-image:url(./pic/sub-conf.png)}""QPushButton:hover{border-image:url(./pic/sub-conf-hover.png)}")
+        self.btnOther = QPushButton()
+        self.btnOther.setFixedSize(75, 20)
+        self.btnOther.setStyleSheet("QPushButton{border-image:url(./pic/sub-other.png)}""QPushButton:hover{border-image:url(./pic/sub-other-hover.png)}")
 
-        self.btnOther = QPushButton(u'其他')
         self.btnCourse.clicked.connect(self.targetCourse)
         self.btnHomework.clicked.connect(self.targetHomework)
         self.btnConf.clicked.connect(self.targetConf)
@@ -1450,24 +2091,24 @@ class Talendar(QWidget):  # 主界面
         # self.leftLayout.setColumnStretch(0, 1)
 
     def initDDL(self):
-        self.DDL = QTableWidget (5,1)
-        #self.DDL.setRowCount(6)
+        self.DDL = QTableWidget(5, 1)
+        # self.DDL.setRowCount(6)
 
-        self.DDL.setColumnWidth(0,250)
-        self.DDL.setRowHeight(0,100)
-        self.DDL.setRowHeight(1,100)
-        self.DDL.setRowHeight(2,100)
-        self.DDL.setRowHeight(3,100)
-        self.DDL.setRowHeight(4,100)
+        self.DDL.setColumnWidth(0, 250)
+        self.DDL.setRowHeight(0, 100)
+        self.DDL.setRowHeight(1, 100)
+        self.DDL.setRowHeight(2, 100)
+        self.DDL.setRowHeight(3, 100)
+        self.DDL.setRowHeight(4, 100)
         self.DDL.setFrameShadow(QFrame.Plain)
-        #self.DDL.setRowHeight(5,100)
+        # self.DDL.setRowHeight(5,100)
         self.DDL.setHorizontalHeaderLabels([u'DDL列表'])
-        self.timenow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
-        self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M')
+        self.timenow = time.strftime('%Y-%m-%d %H:%M', time.localtime())
+        self.timeArray = time.strptime(self.timenow, '%Y-%m-%d %H:%M')
         self.timeStamp = int(time.mktime(self.timeArray))
-        #print self.timeStamp
-        #timeLeft = time.localtime(timeLeftStamp)
-        #timeLeftStr=time.strftime('%Y-%m-%d %H:%M:%S',timeLeft)
+        # print self.timeStamp
+        # timeLeft = time.localtime(timeLeftStamp)
+        # timeLeftStr=time.strftime('%Y-%m-%d %H:%M:%S',timeLeft)
         items = getcompletelist()
         titleList = []
         endDateList = []
@@ -1475,8 +2116,8 @@ class Talendar(QWidget):  # 主界面
             if len(item) == 17:
                 id, title, loc, startTime, endTime, reminder, reminderUnit, \
                 reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-                checkBoxGroup, sonID, note  = item
-            elif len(item) ==18:
+                checkBoxGroup, sonID, note = item
+            elif len(item) == 18:
                 id, title, loc, startTime, endTime, reminder, reminderUnit, \
                 reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
                 checkBoxGroup, sonID, sonIDList, note = item
@@ -1485,75 +2126,71 @@ class Talendar(QWidget):  # 主界面
                 temp = endTime.split()
                 endTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
                 endDateList.append(endTime)
-        #item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
-        #deadLine = (str('2017-12-20 23:59'),str('2017-12-10 23:59'),str('2017-12-13 23:59'),str('2017-12-17 23:59'),str('2017-12-7 23:59'),str('2017-12-6 23:59'))
+        # item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
+        # deadLine = (str('2017-12-20 23:59'),str('2017-12-10 23:59'),str('2017-12-13 23:59'),str('2017-12-17 23:59'),str('2017-12-7 23:59'),str('2017-12-6 23:59'))
         flag = [i for i in range(len(titleList))]
         flag.append(0)
-        #flag =[0,1,2,0,0,0]#最后一位是为了移动方便，其实不用这个
+        # flag =[0,1,2,0,0,0]#最后一位是为了移动方便，其实不用这个
         timeStampMax = 15778116610
-        timeLeftStamp = [timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax,timeStampMax]
+        timeLeftStamp = [timeStampMax, timeStampMax, timeStampMax, timeStampMax, timeStampMax, timeStampMax]
         for i in range(len(titleList)):
-            timeddl = time.strptime(endDateList[i],'%Y-%m-%d %H:%M')
+            timeddl = time.strptime(endDateList[i], '%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
-            timeLeftStampTemp = timeDDL-self.timeStamp
-            for j in range(0,len(flag)-1):
-                if(timeLeftStampTemp<timeLeftStamp[j] ):
-                    for k in range(j,len(flag)-1):
-                       kk=j+len(flag)-1-k-1
-                       flag[kk+1]=flag[kk]
-                       timeLeftStamp[kk+1] = timeLeftStamp[kk]
+            timeLeftStampTemp = timeDDL - self.timeStamp
+            for j in range(0, len(flag) - 1):
+                if (timeLeftStampTemp < timeLeftStamp[j]):
+                    for k in range(j, len(flag) - 1):
+                        kk = j + len(flag) - 1 - k - 1
+                        flag[kk + 1] = flag[kk]
+                        timeLeftStamp[kk + 1] = timeLeftStamp[kk]
 
-                    timeLeftStamp[j]=timeLeftStampTemp
+                    timeLeftStamp[j] = timeLeftStampTemp
                     flag[j] = i
                     break
 
-        for m in range(0,len(flag)-1):
-            self.initDDLItem(titleList[flag[m]],endDateList[flag[m]])
-            self.DDL.setCellWidget(m,0,self.DDLItem)
+        for m in range(0, len(flag) - 1):
+            self.initDDLItem(titleList[flag[m]], endDateList[flag[m]])
+            self.DDL.setCellWidget(m, 0, self.DDLItem)
 
-    def initDDLItem(self,item,deadLine):
-        self.DDLItem = QTableWidget (3,1)
+    def initDDLItem(self, item, deadLine):
+        self.DDLItem = QTableWidget(3, 1)
 
-        self.DDLItem.setColumnWidth(0,200)
+        self.DDLItem.setColumnWidth(0, 200)
 
-        self.DDLItem.setRowHeight(1,30)
-        self.DDLItem.setRowHeight(2,30)
-        self.DDLItem.setRowHeight(0,30)
-        self.DDLItem.setVerticalHeaderLabels([u'内容',u'截止时间',u'剩余时间'])
+        self.DDLItem.setRowHeight(1, 30)
+        self.DDLItem.setRowHeight(2, 30)
+        self.DDLItem.setRowHeight(0, 30)
+        self.DDLItem.setVerticalHeaderLabels([u'内容', u'截止时间', u'剩余时间'])
         self.DDLItem.setShowGrid(False)
         self.DDLItem.horizontalHeader().hide()
 
-        timeddl = time.strptime(deadLine,'%Y-%m-%d %H:%M')
+        timeddl = time.strptime(deadLine, '%Y-%m-%d %H:%M')
         timeDDL = int(time.mktime(timeddl))
-        timeLeftStampTemp = timeDDL-self.timeStamp
+        timeLeftStampTemp = timeDDL - self.timeStamp
 
-        timeLeftDay=timeLeftStampTemp/86400
-        timeLeftHour=(timeLeftStampTemp-timeLeftDay*86400 )/3600
-        timeLeftMin=(timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600)/60
-        #timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
+        timeLeftDay = timeLeftStampTemp / 86400
+        timeLeftHour = (timeLeftStampTemp - timeLeftDay * 86400) / 3600
+        timeLeftMin = (timeLeftStampTemp - timeLeftDay * 86400 - timeLeftHour * 3600) / 60
+        # timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
 
-        LeftTime = str(timeLeftDay )+u'天'+str(timeLeftHour)+u'小时'+str(timeLeftMin )+u'分钟'
-
-
-
+        LeftTime = str(timeLeftDay) + u'天' + str(timeLeftHour) + u'小时' + str(timeLeftMin) + u'分钟'
 
         newitem = QTableWidgetItem(item)
-        #newitem.setBackgroundColor(QColor(100,25,25) )
-        self.DDLItem.setItem(0,0,newitem)
+        # newitem.setBackgroundColor(QColor(100,25,25) )
+        self.DDLItem.setItem(0, 0, newitem)
         newitem = QTableWidgetItem(deadLine)
-        self.DDLItem.setItem(1,0,newitem)
+        self.DDLItem.setItem(1, 0, newitem)
         newitem = QTableWidgetItem(LeftTime)
 
-        if(timeLeftStampTemp>7*86400):
-            newitem.setBackgroundColor(QColor(0,255,0) )
-        else :
-            if(timeLeftStampTemp >3*86400):
-                newitem.setBackgroundColor(QColor(255,255,0) )
+        if (timeLeftStampTemp > 7 * 86400):
+            newitem.setBackgroundColor(QColor(0, 255, 0))
+        else:
+            if (timeLeftStampTemp > 3 * 86400):
+                newitem.setBackgroundColor(QColor(255, 255, 0))
             else:
-                newitem.setBackgroundColor(QColor(255,0,0) )
+                newitem.setBackgroundColor(QColor(255, 0, 0))
 
-        self.DDLItem.setItem(2,0,newitem)
-
+        self.DDLItem.setItem(2, 0, newitem)
 
     def reverseDDLFlag(self):
         if self.ddlFlag:
@@ -1562,35 +2199,30 @@ class Talendar(QWidget):  # 主界面
             self.ddlFlag = True
 
     def updateDDL(self):
-        print self.ddlFlag
+        # print self.ddlFlag
         if self.ddlFlag:
             self.resize(1156, 600)
             self.initDDL()
-            self.mainLayout.addWidget(self.DDL,0,2)
+            self.mainLayout.addWidget(self.DDL, 0, 2)
             self.mainLayout.setColumnStretch(1, 2)
 
-            #self.mainLayout.setColumnStretch(1, 5);
-            #self.mainLayout. setColumnStretch(1, 2);
-            #self.mainLayout.setColumnStretch(10, 2);
+            # self.mainLayout.setColumnStretch(1, 5);
+            # self.mainLayout. setColumnStretch(1, 2);
+            # self.mainLayout.setColumnStretch(10, 2);
 
-        else :
+        else:
             try:
-                #print 'here'
+                # print 'here'
                 self.DDL.close()
-                #self.DDL.destroy()
+                # self.DDL.destroy()
                 self.resize(880, 600)
             except:
-             #   #print 'here2'
+                #   #print 'here2'
                 pass
-
-
 
     def showDDL(self):
         self.reverseDDLFlag()
         self.updateDDL()
-
-
-
 
     def fillBlank(self, flag, start, end):  # column 1 row 0
         for i in range(start, end):
@@ -1610,7 +2242,7 @@ class Talendar(QWidget):  # 主界面
         # self.setGeometry(300, 300, 290, 150)
         self.setWindowTitle('Emit signal')
         self.show()
-        #twinkle([1,2,4])
+        # twinkle([1,2,4])
 
     def newWindow(self):  # 新建事项窗口的接口
         fname = "data/root/0_time_routine_ls"
@@ -1641,154 +2273,63 @@ class Talendar(QWidget):  # 主界面
         # f.close()
         addWindow = Add()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
-            name = addWindow.editTitle.text()
-            if name == '': name = 'None'
-            location = addWindow.editLoc.text()
-            if location == '': location = 'None'
-            startDate = addWindow.editStartDate.text()
-            if startDate == '':
-                startDate = '1000-1-1'
-            else:
-                startDate = filter(str(startDate))
-            startHour = addWindow.editStartHour.text()
-            if startHour == '': startHour = '25'
-            startMinute = addWindow.editStartMinute.text()
-            if startMinute == '': startMinute = '61'
-            endDate = addWindow.editEndDate.text()
-            if endDate == '':
-                endDate = '1000-1-1'
-            else:
-                endDate = filter(str(endDate))
-            endHour = addWindow.editEndHour.text()
-            if endHour == '': endHour = '25'
-            endMinute = addWindow.editEndMinute.text()
-            if endMinute == '': endMinute = '61'
-            note = addWindow.editNote.toPlainText()
-            if note == '': note = 'None'
-            reminder = addWindow.comboReminder.currentIndex()
-            reminderUnit = addWindow.comboReminderUnit.currentIndex()
-            reminderNumber = addWindow.editReminderTime.text()
-            if reminderNumber == '': reminderNumber = '-1'
-            tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
-            f_tags = open(r"data/root/tags", 'r')
-            tags_list = f_tags.readlines()
-            f_tags.close()
-            f_tags = open(r"data/root/tags", 'w')
-            f_tags.writelines(tags_list)
-            filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
-            flag = False
-            # print tags_list
-            for i in range(5):
-                if tags[i] != '':
-                    for j in range(tags_list.__len__()):
-                        if str(tags[i]) == tags_list[j].replace('\n', ''):
-                            flag = True
-                    if not flag:
-                        f_tags.write(str(tags[i]) + '\n')
-                    tag_filename = 'data/root/' + tags[i]
-                    f_special_tags = open(tag_filename.decode('utf-8'), 'a')
-                    f_special_tags.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                                         + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-                    f_special_tags.close()
-            f_tags.close()
-            repeatInfo = addWindow.repeatParameters
-            print repeatInfo
-            # sonIDList = addWindow.sonIDList
-            # 给父级事件赋子事件
-            note_path = 'data/note/' + str(last_num + 1)
-            path = 'data/list/' + filename
-            f_notefile = open(note_path, 'w')
-            f_notefile.write(note)
-            f_notefile.close()
-            f = open(path, 'w')
-            f.write(str(last_num + 1) + '\n')
-            f.write(name + '\n')
-            f.write(location + '\n')
-            f.write(startDate + ' ' + startHour + ' ' + startMinute + '\n')
-            f.write(endDate + ' ' + endHour + ' ' + endMinute + '\n')
-            f.write(str(reminder) + '\n')
-            f.write(str(reminderUnit) + '\n')
-            f.write(reminderNumber + '\n')
-            for i in range(5):
-                f.write(str(tags[i]) + ',')
-            f.write('\n')
-            #f_repeat = open(r'data/list/new', 'r')
-            #repeat_list = f_repeat.readlines()
-            #f_repeat.close()
-            if repeatInfo == []:
-                f.write('-1' + '\n')
-                f.write('-1' + '\n')
-                f.write('[False, False, False]' + '\n')
-                f.write('-1' + '\n')
-                f.write('1000-1-1' + '\n')
-                f.write('[False, False, False, False, False, False, False]' + '\n')
-            else:
-                for i in range(6):
-                    f.write(str(repeatInfo[i]) + '\n')
-            f_sonIDlist = open(fname_sonIDlist, 'r')
-            son_list = f_sonIDlist.readlines()
-            # print son_list
-            f.writelines(son_list)
-            f_sonIDlist.close()
-            os.remove(fname_sonIDlist)
-            #os.remove(r'data/list/new')
-            f.close()
-            # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
-            # time_routine_list = f_time_routine.readlines()
-            # time_routine_list.insert(last_num+1,str(last_num+1)+' '+filename)
-            # f_time_routine.close()
-            f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
-            f_time_routine.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                                 + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-            # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
-            # print repeatInfo
-            f_time_routine.close()
-            # a = getcompletelist()
-            # print a
-            a = details('3')
-            #print 'hahahahahah'
+            save(addWindow, last_num, fname_sonIDlist)
             self.refresh()
-
 
             return
 
     def mousePressEvent(self, event):
-        self.c.closeApp.emit()
+        if event.button() == Qt.LeftButton:
+            self.dragPosition = event.globalPos() - self.frameGeometry().topLeft()
+            QApplication.postEvent(self, QEvent(174))
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.move(event.globalPos() - self.dragPosition)
+            event.accept()
 
     ########################### updated part#################
     def initCalendarGrid(self):
 
+        self.grid = self.WeekGrid(self.starttime)
+        self.date = datetime.now()
+        self.grid.close()
+        self.grid = self.MonthGrid()
 
-
-        self.grid=self.WeekGrid()
+        #self.grid = self.MonthGrid()
         self.calendarLayout = QGridLayout()
-        
+        self.calendarLayout.setContentsMargins(0, 0, 13, 0)
+
         self.calendarLayout.addWidget(self.grid)
+
     def transFlag(self):
         if self.pageFlag == 'w':
             self.pageFlag = 'm'
         elif self.pageFlag == 'm':
             self.pageFlag = 'w'
+
     def refresh(self):
-        if self.pageFlag=='w':
-            self.date=datetime.now()
+        if self.pageFlag == 'w':
+            self.date = datetime.now()
             self.grid.close()
-            self.grid=self.WeekGrid()
+            self.grid = self.WeekGrid(self.starttime)
             self.calendarLayout.addWidget(self.grid)
         else:
-            self.date=datetime.now()
+            self.date = datetime.now()
             self.grid.close()
-            self.grid=self.MonthGrid()
+            self.grid = self.MonthGrid()
             self.calendarLayout.addWidget(self.grid)
         self.updateDDL()
-        #<<<<<<< HEAD
-        #twinkle([1,2,3])
-        #=======
-        #self.twinkle([4])
-        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-        #a = getcompletelist()
-        #print 'all------'
-        #print a
+        # <<<<<<< HEAD
+        # twinkle([1,2,3])
+        # =======
+        # self.twinkle([4])
+        # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+        # a = getcompletelist()
+        # print 'all------'
+        # print a
+
     def Transform(self):
         self.transFlag()
         self.ddlFlag = False
@@ -1797,84 +2338,95 @@ class Talendar(QWidget):  # 主界面
     def twinkle_b(self):
         import time
         nolist = self.nolist
+        print nolist
         colnum = 7
         rownum = self.rowNum
-        templist=[]
-        colorlist=[]
-        #<<<<<<< HEAD
-        #=======
-        print "nolist",nolist
-        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+        templist = []
+        colorlist = []
+        # <<<<<<< HEAD
+        # =======
+        # print "nolist",nolist
+        # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+
+
+
         for i in range(colnum):
             for j in range(rownum):
-                tempWidget=self.grid.cellWidget(j,i)
-                n=tempWidget.count()
-                if self.pageFlag=='w':
-                    n=n-1
+                tempWidget = self.grid.cellWidget(j, i)
+                try:
+                    n = tempWidget.count()
+                except:
+                    continue
+                if self.pageFlag == 'w':
+                    n = n - 1
                 for w in range(n):
-                    if self.pageFlag=='w':
-                        w=w+1
-                    #print w
-                    items=tempWidget.item(w)
-                    numlist=items.statusTip()
-                    #print numlist
-                    numlist=numlist.split('-')
-                    #print numlist
-                    for w,item in enumerate(numlist) :
-                        #print item
-                        if  not item=='' and str(item) in nolist:
+                    if self.pageFlag == 'w':
+                        w = w + 1
+                    # print w
+                    items = tempWidget.item(w)
+                    numlist = items.statusTip()
+                    # print numlist
+                    numlist = numlist.split('-')
+                    # print numlist
+                    for w, item in enumerate(numlist):
+                        # print item
+                        if not item == '' and str(item) in nolist:
                             items.setBackground(QColor(Qt.yellow))
                             templist.append(items)
                             colorlist.append(item)
-        self.templist=templist
-        self.colorlist=colorlist
-        #print templist
-        return templist,colorlist
+        self.templist = templist
+        self.colorlist = colorlist
+        # print templist
+        return templist, colorlist
 
-    def twinkle_d(self,templist,colorlist):
-        #<<<<<<< HEAD
-        #=======
-        #print "test",templist, colorlist
-        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-        for i,item in enumerate(templist):
+    def twinkle_d(self, templist, colorlist):
+        # <<<<<<< HEAD
+        # =======
+        # print "test",templist, colorlist
+        # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+        for i, item in enumerate(templist):
             item.setBackground(self.getColor(colorlist[i]))
 
-    def twinkle(self,nolist):#闪烁调用接口，需要传入id的list，id为字符串格式。利用了self.nolist, self.templist和self.colorlist来传参，可以调整闪烁时间和闪烁次数
-        self.nolist=nolist
-        #<<<<<<< HEAD
-        #=======
-        #print nolist
-        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-        self.templist=[]
-        self.colorlist=[]
-        self.times=QTimer(self)
-        self.ww=0
+    def twinkle(self,
+                nolist):  # 闪烁调用接口，需要传入id的list，id为字符串格式。利用了self.nolist, self.templist和self.colorlist来传参，可以调整闪烁时间和闪烁次数
+        self.nolist = nolist
+        # <<<<<<< HEAD
+        # =======
+
+        # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+        self.templist = []
+        self.colorlist = []
+        self.times = QTimer(self)
+        self.ww = 0
         self.times.timeout.connect(self.twinkle__)
-        #<<<<<<< HEAD
-        self.times.start(100)#闪烁时间
-        #=======
-        #self.times.start(50)#闪烁时间
-        #self.twinkle__()
-        #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+        # <<<<<<< HEAD
+        self.times.start(100)  # 闪烁时间
+        # =======
+        # self.times.start(50)#闪烁时间
+        # self.twinkle__()
+        # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
 
     def twinkle__(self):
-        if self.ww>16:#闪烁次数
+        if self.ww > 16:  # 闪烁次数
             self.times.stop()
-        if self.ww%2==0:
-            self.templist,self.colorlist=self.twinkle_b()
+        if self.ww % 2 == 0:
+            self.templist, self.colorlist = self.twinkle_b()
         else:
-            self.twinkle_d(self.templist,self.colorlist)
-        self.ww+=1
+            self.twinkle_d(self.templist, self.colorlist)
+        self.ww += 1
 
-    def getColor(self,no):
+    def getColor(self, no):
         if no==-1:
             return QColor(125,234,234,125)
-        colortable=[QColor(234,123,123,125),QColor(125,125,234,125),QColor(125,200,123,125),QColor(120,130,210,125),QColor(125,150,160,125)]
+        colortable=[QColor(234,123,123,125),QColor(200,125,234,125),QColor(125,200,123,125),QColor(120,130,210,125),QColor(125,150,160,125),QColor(12,200,56,125),QColor(36,136,159,125),QColor(225,157,189,125),QColor(173,230,145,125)]
         return colortable[int(no)%len(colortable)]
 
-    def WeekGrid(self):
+    def WeekGrid(self, starttime=1, endtime=24):
+        self.rowNum=endtime-starttime+1
+        #self.starttime_=starttime
         rowNum = self.rowNum       
         grid = QTableWidget()
+        #print rowNum
         grid.setSelectionMode(QAbstractItemView.SingleSelection)
         grid.setColumnCount(7)
         grid.setRowCount(self.rowNum)
@@ -1896,8 +2448,8 @@ class Talendar(QWidget):  # 主界面
         grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
         rowlabels = []
 
-        for i in range(self.rowNum):
-            rowlabels.append(str(i+1)+':00')
+        for i in range(rowNum):
+            rowlabels.append(str(i+starttime)+':00')
 
         grid.setVerticalHeaderLabels(rowlabels)
         ##############################################
@@ -1916,9 +2468,10 @@ class Talendar(QWidget):  # 主界面
                 flag=1
             for row in range(rowNum):
                 #<<<<<<< HEAD
-                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1))
+                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+starttime))
+                #print col,row
                 #=======
-                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+1), self.targetTag)
+                scheduleid,scheduletitle=self.getHourScheduleTitle(beginDate.strftime("%Y-%m-%d")+'-'+str(row+starttime), self.targetTag)
                 #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
                 comBox=QListWidget()
                 newItem=QListWidgetItem('')
@@ -1928,7 +2481,7 @@ class Talendar(QWidget):  # 主界面
                 comBox.addItem(newItem)
                 otherschedule=[]
                 for i,title in enumerate(scheduletitle):
-                    if i<5:
+                    if i<3:
                         if len(title)>18:
                             title=title[:18]+u'...'
                         newItem=QListWidgetItem(unicode(title))
@@ -1959,8 +2512,9 @@ class Talendar(QWidget):  # 主界面
 
         return grid
 
-
-    def getDayScheduleTitle(self, endDate, targetTag = None):
+    def getDayScheduleTitle(self, endDate, targetTag=None):
+        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
+        endDate_list = endDate.split('-')
         IDlist = []
         Namelist = []
         _list = []
@@ -1969,12 +2523,10 @@ class Talendar(QWidget):  # 主界面
             temp = lists[i].split(' ')
             temp_list = temp[2].split('-')
             temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
-            #print temp_endDate, endDate
+            # print temp_endDate, endDate
             temp_ID = temp[0]
-
-            #get_tag_list(targetTag)
-            #print a
-
+            # get_tag_list(targetTag)
+            # print a
             if targetTag != None:
                 inThisTag = get_tag_list(targetTag)
                 idlist = []
@@ -1985,38 +2537,157 @@ class Talendar(QWidget):  # 主界面
             if temp_endDate == endDate:
                 IDlist.append(temp[0])
                 Namelist.append(temp[3])
+            else:
+                filename = temp_ID + '$$' + temp_endDate + '$$' + temp_list[3]
+                path = 'data/list/' + filename
+                f = open(path, 'r')
+                detail = f.readlines()
+                __list = detail[3].split(' ')  #####
+                startlist = __list[0].split('-')
+                startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
+                TstartDate = datetime.strptime(startDate, '%Y-%m-%d')
+                repeattype = detail[9].replace('\n', '')
+                # 0:天 1:周 2:月 3:年
+                repeatfren = int(detail[10].replace('\n', ''))
+                endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(',')
+                endtype = -1  #######
+                for j in range(len(endtypelist)):
+                    if endtypelist[j] == 'True':
+                        endtype = j
+                        # 0:永不 1;重复次数 2：结束日期
+                repeattimes = int(detail[12].replace('\n', ''))
+                print detail[13].replace('\n', '')
+                enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
+                repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
+                if TendDate >= TstartDate:
+                    if repeattype == '0':
+                        if endtype == 0:  # 按日重复，永不停止
+                            delta = TendDate - TstartDate
+                            if delta.days % repeatfren == 0:
+                                IDlist.append(temp[0])
+                                Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照日重复，间隔一定的天数
+                            due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
+                            delta = TendDate - TstartDate
+                            if due_date > TendDate:
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 2:  # 按天重复到某个日期
+                            delta = TendDate - TstartDate
+                            if enddate >= TendDate:
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                    elif repeattype == '1':
+                        if endtype == 0:  # 按周重复，永不停止
+                            weekday = TendDate.weekday()
+                            if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                delta = TendDate - TstartDate
+                                if delta.days % (7 * repeatfren) == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照周重复一定的次数
+                            due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
+                            if due_date > TendDate:
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 2:  # 按周重复到某个日期
+                            if enddate >= TendDate:
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                    elif repeattype == '2':
+                        if endtype == 0:  # 按月重复，永不停止
+                            delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                startlist[1])
+                            if delta % repeatfren == 0:
+                                if endDate_list[2] == startlist[2]:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照月重复一定的次数
+                            if endDate_list[2] == startlist[2]:
+                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                    startlist[1])
+                                if delta % repeatfren == 0:
+                                    if delta / repeatfren < repeattimes:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 2:  # 按月重复到某个日期
+                            if enddate >= TendDate:
+                                if endDate_list[2] == startlist[2]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                        endDate_list[1]) - int(
+                                        startlist[1])
+                                    if delta % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                    elif repeattype == '3':
+                        if endtype == 0:  # 按年重复，永不停止
+                            delta = (int(endDate_list[0]) - int(startlist[0]))
+                            if delta % repeatfren:
+                                if endDate_list[2] == startlist[2]:
+                                    if endDate_list[1] == startlist[1]:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif endtype == 1:  # 按照年重复一定的次数
+                            if endDate_list[2] == startlist[2]:
+                                if endDate_list[1] == startlist[1]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0]))
+                                    if delta % repeatfren == 0:
+                                        if delta / repeatfren < repeattimes:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif endtype == 2:  # 按月重复到某个日期
+                            if enddate >= TendDate:
+                                delta = (int(endDate_list[0]) - int(startlist[0]))
+                                if delta % repeatfren:
+                                    if endDate_list[2] == startlist[2]:
+                                        if endDate_list[1] == startlist[1]:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
         _list.append(IDlist)
         _list.append(Namelist)
-        #print _list
+        # print _list
         return _list
 
-
-
-    def getHourScheduleTitle(self, startDate, targetTag = None):
+    def getHourScheduleTitle(self, startDate, targetTag=None):
+        #print startDate
+        endDate_list = startDate.split('-')
+        endDate = endDate_list[0] + '-' + endDate_list[1] + '-' + endDate_list[2]
+        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
         IDlist = []
         Namelist = []
         _list = []
         lists = getlist()
-        #print endDate
+        # print endDate
         for i in range(len(lists)):
             temp = lists[i].split(' ')
-            #print temp
-            temp_list = temp[1].split('-')
-            temp_list1= temp[2].split('-')
-            if len(temp_list[2]) == 1:
+            # print temp
+            temp_list = temp[1].split('-')  # 开始时间
+            temp_list1 = temp[2].split('-')  # 结束时间
+            temp_endDate1 = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
+            if len(temp_list[2]) == 1:  # 如果只有一个字符加0
                 temp_list[2] = '0' + temp_list[2]
-            if len(temp_list1[2])==1:
-                temp_list1[2]='0'+temp_list1[2]
-            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2] 
-            endhour=int(temp_list[3])
-            temp_beginDate=temp_list1[0]+'-'+temp_list1[1]+'-'+temp_list1[2]
-            beginhour=int(temp_list1[3])
-            #print temp_endDate
-            #print endDate
-            #<<<<<<< HEAD
-            print endhour,beginhour
-            #=======
-            #print endhour,beginhour
+            if len(temp_list1[2]) == 1:
+                temp_list1[2] = '0' + temp_list1[2]
+            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
+            endhour = int(temp_list[3])
+            # temp_beginDate = temp_list1[0] + '-' + temp_list1[1] + '-' + temp_list1[2]
+            beginhour = int(temp_list1[3])
+            # print temp_endDate
+            # print endDate
+            # <<<<<<< HEAD
+            # print endhour, beginhour
+            # =======
+            # print endhour,beginhour
             temp_ID = temp[0]
 
             # get_tag_list(targetTag)
@@ -2030,21 +2701,141 @@ class Talendar(QWidget):  # 主界面
                 if temp_ID not in idlist:
                     continue
 
-            #>>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-            if temp_endDate == startDate[:-2] and endhour<=int(startDate[-1]) and beginhour>=int(startDate[-1]) :
-                IDlist.append(temp[0])
-                Namelist.append(temp[3])
+            # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
+            #print endDate_list[-1]
+            if endhour <= int(endDate_list[-1]) and beginhour >= int(endDate_list[-1]):
+
+                if temp_endDate == endDate:
+                    IDlist.append(temp[0])
+                    Namelist.append(temp[3])
+                else:
+                    filename = temp_ID + '$$' + temp_endDate1 + '$$' + temp_list1[3]
+                    path = 'data/list/' + filename
+                    f = open(path, 'r')
+                    detail = f.readlines()
+                    startlist = detail[3].split('-')
+                    __list = detail[3].split(' ')  #####
+                    startlist = __list[0].split('-')
+                    _startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
+                    TstartDate = datetime.strptime(_startDate, '%Y-%m-%d')
+                    repeattype = detail[9].replace('\n', '')
+                    # 0:天 1:周 2:月 3:年
+                    repeatfren = int(detail[10].replace('\n', ''))
+                    endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(
+                        ',')
+                    endtype = -1
+                    for j in range(len(endtypelist)):
+                        if endtypelist[j] == 'True':
+                            endtype = j
+                            # 0:永不 1;重复次数 2：结束日期
+                    repeattimes = int(detail[12].replace('\n', ''))
+                    enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
+                    repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
+                    if TendDate >= TstartDate:
+                        if repeattype == '0':
+                            if endtype == 0:  # 按日重复，永不停止
+                                delta = TendDate - TstartDate
+                                if delta.days % repeatfren == 0:
+                                    IDlist.append(temp[0])
+                                    Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照日重复，间隔一定的天数
+                                due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
+                                delta = TendDate - TstartDate
+                                if due_date > TendDate:
+                                    if delta.days % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 2:  # 按天重复到某个日期
+                                delta = TendDate - TstartDate
+                                if enddate >= TendDate:
+                                    if delta.days % repeatfren == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                        elif repeattype == '1':
+                            if endtype == 0:  # 按周重复，永不停止
+                                weekday = TendDate.weekday()
+                                if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                    delta = TendDate - TstartDate
+                                    if delta.days % (7 * repeatfren) == 0:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照周重复一定的次数
+                                due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
+                                if due_date > TendDate:
+                                    weekday = TendDate.weekday()
+                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                        delta = TendDate - TstartDate
+                                        if delta.days % (7 * repeatfren) == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 2:  # 按周重复到某个日期
+                                if enddate >= TendDate:
+                                    weekday = TendDate.weekday()
+                                    if repeatweekdays[(weekday + 1) % 7] == 'True':
+                                        delta = TendDate - TstartDate
+                                        if delta.days % (7 * repeatfren) == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif repeattype == '2':
+                            if endtype == 0:  # 按月重复，永不停止
+                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
+                                    startlist[1])
+                                if delta % repeatfren == 0:
+                                    if endDate_list[2] == startlist[2]:
+                                        IDlist.append(temp[0])
+                                        Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照月重复一定的次数
+                                if endDate_list[2] == startlist[2]:
+                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                        endDate_list[1]) - int(
+                                        startlist[1])
+                                    if delta % repeatfren == 0:
+                                        if delta / repeatfren < repeattimes:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 2:  # 按月重复到某个日期
+                                if enddate >= TendDate:
+                                    if endDate_list[2] == startlist[2]:
+                                        delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
+                                            endDate_list[1]) - int(
+                                            startlist[1])
+                                        if delta % repeatfren == 0:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                        elif repeattype == '3':
+                            if endtype == 0:  # 按年重复，永不停止
+                                delta = (int(endDate_list[0]) - int(startlist[0]))
+                                if delta % repeatfren:
+                                    if endDate_list[2] == startlist[2]:
+                                        if endDate_list[1] == startlist[1]:
+                                            IDlist.append(temp[0])
+                                            Namelist.append(temp[3])
+                            elif endtype == 1:  # 按照年重复一定的次数
+                                if endDate_list[2] == startlist[2]:
+                                    if endDate_list[1] == startlist[1]:
+                                        delta = (int(endDate_list[0]) - int(startlist[0]))
+                                        if delta % repeatfren == 0:
+                                            if delta / repeatfren < repeattimes:
+                                                IDlist.append(temp[0])
+                                                Namelist.append(temp[3])
+                            elif endtype == 2:  # 按月重复到某个日期
+                                if enddate >= TendDate:
+                                    delta = (int(endDate_list[0]) - int(startlist[0]))
+                                    if delta % repeatfren:
+                                        if endDate_list[2] == startlist[2]:
+                                            if endDate_list[1] == startlist[1]:
+                                                IDlist.append(temp[0])
+                                                Namelist.append(temp[3])
         _list.append(IDlist)
         _list.append(Namelist)
         return _list
 
-    def mouseDoubleClicked(self,eve):
+    def mouseDoubleClicked(self, eve):
         self.mouseClicked(eve.statusTip())
-        #isSelected(False)
-       
+        # isSelected(False)
 
-    def mouseClicked(self, ID):#鼠标响应接口，需要对ID类型进行判断，如果为空，则直接返回，不为空，分为单个时间和多个事件，多个事件一定以‘-’结尾
-        #print ID
+    def mouseClicked(self, ID):  # 鼠标响应接口，需要对ID类型进行判断，如果为空，则直接返回，不为空，分为单个时间和多个事件，多个事件一定以‘-’结尾
+        # print ID
 
         IDs = unicode(ID).split('-')
 
@@ -2058,168 +2849,193 @@ class Talendar(QWidget):  # 主界面
             IDs = IDs[0]
             showWindow = Show(IDs)
             if showWindow.exec_():
-                self.twinkle(showWindow.sonIDList)
+
+                if showWindow.flag == 1:
+                    #print 'twinkle'
+                    self.twinkle(showWindow.sonIDList[1:])
+                    # self.twinkle(showWindow.sonIDList)
+                if showWindow.deleteflag == 1:
+                    pass
+                else:
+
+                    fname = "data/root/0_time_routine_ls"
+                    fname_sonIDlist = "data/list/sonIDlist"
+                    f_sonIDlist = open(fname_sonIDlist, 'w')
+                    with open(fname, 'r') as f:
+                        lines = f.readlines()
+                        last_line = lines[-1]
+                        penult_line = lines[-2]
+                    list1 = last_line.split(' ')
+                    list2 = penult_line.split(' ')
+                    last_num = int(list1[0])
+                    if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
+                    f.close()
+                    f_sonIDlist.write('0' + '\n')
+                    f_sonIDlist.write(str(last_num + 1) + ',')
+                    f_sonIDlist.close()
+                    save(showWindow, last_num, fname_sonIDlist)
+                    remove(IDs)
                 self.refresh()
                 return
 
-
-    def addNewEvent(self,row,col,ID,title):#仅更改显示，数据未存
-        comBox=self.grid.cellWidget(row,col)
+    def addNewEvent(self, row, col, ID, title):  # 仅更改显示，数据未存
+        comBox = self.grid.cellWidget(row, col)
         if comBox is None:
-            comBox=QListWidget()
-            self.grid.setCellWidget(row,col,comBox)
-        if comBox.count()>0:
-            item_C=comBox.item(comBox.count()-1)
-            if item_C.statusTip()[-1]=='-':
-                string_c=item_C.statusTip()
-                num=string_c.count('-')
-                string_c=string_c+str(ID)+'-'
+            comBox = QListWidget()
+            self.grid.setCellWidget(row, col, comBox)
+        if comBox.count() > 0:
+            item_C = comBox.item(comBox.count() - 1)
+            if item_C.statusTip()[-1] == '-':
+                string_c = item_C.statusTip()
+                num = string_c.count('-')
+                string_c = string_c + str(ID) + '-'
                 item_C.setStatusTip(string_c)
-                item_C.setText(u"还有%d项..."%(num+1))
+                item_C.setText(u"还有%d项..." % (num + 1))
                 return
-            elif comBox.count()>2:
-                item_C=QListWidgetItem(u"还有1项...")
-                item_C.setFont(QFont(FontType,FontSize))
-                item_C.setStatusTip(str(ID)+'-')
+            elif comBox.count() > 2:
+                item_C = QListWidgetItem(u"还有1项...")
+                item_C.setFont(QFont(FontType, FontSize))
+                item_C.setStatusTip(str(ID) + '-')
                 comBox.addItem(item_C)
-                return 
-        if len(title)>18:
-            title=title[:18]+u'...'
-        newItem=QListWidgetItem(unicode(title))
-        newItem.setFont(QFont(FontType,FontSize))
+                return
+        if len(title) > 18:
+            title = title[:18] + u'...'
+        newItem = QListWidgetItem(unicode(title))
+        newItem.setFont(QFont(FontType, FontSize))
         newItem.setStatusTip(str(ID))
         comBox.addItem(newItem)
         comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
 
     def MonthGrid(self):
-        beginDay=datetime(int(self.date.strftime("%Y")),int(self.date.strftime("%m")),1)
-        year=int(self.date.strftime("%Y"))
-        month=int(self.date.strftime("%m"))
-        beginRow=0
-        beginCol=self.tableDict[beginDay.strftime("%a").decode('utf-8')]
-        monthTime=monthrange(int(self.date.strftime("%Y")),int(self.date.strftime("%m")))[1]
-        todayCol=self.tableDict[self.date.strftime("%a").decode('utf-8')]
-        todayRow=(int(self.date.strftime("%d"))+beginCol-1)/7
-        mrowNum=(beginCol+monthTime+6)/7
-        grid=QTableWidget()
+        beginDay = datetime(int(self.date.strftime("%Y")), int(self.date.strftime("%m")), 1)
+        year = int(self.date.strftime("%Y"))
+        month = int(self.date.strftime("%m"))
+        beginRow = 0
+        beginCol = self.tableDict[beginDay.strftime("%a").decode('utf-8')]
+        monthTime = monthrange(int(self.date.strftime("%Y")), int(self.date.strftime("%m")))[1]
+        todayCol = self.tableDict[self.date.strftime("%a").decode('utf-8')]
+        todayRow = (int(self.date.strftime("%d")) + beginCol - 1) / 7
+        mrowNum = (beginCol + monthTime + 6) / 7
+        self.rowNum = mrowNum
+        grid = QTableWidget()
         grid.setColumnCount(7)
         grid.setRowCount(mrowNum)
-        column_width=[ColWidth for i in range(7)]
+        column_width = [ColWidth for i in range(7)]
         for column in range(7):
-            grid.setColumnWidth(column,column_width[column])
+            grid.setColumnWidth(column, column_width[column])
         for row in range(mrowNum):
-            grid.setRowHeight(row,RowHeight)
+            grid.setRowHeight(row, RowHeight)
 
         grid.setHorizontalHeaderLabels(self.headerlabels)
         grid.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        for day in range(monthTime):            
-            text=beginDay.strftime("%m-%d")
-            scheduleid,scheduletitle=self.getDayScheduleTitle(str(year)+'-'+str(month)+'-'+str(day+1), self.targetTag)
-            #print scheduleid, scheduletitle
-            comBox = QListWidget() 
-            newItem=QListWidgetItem(unicode(text))
+        for day in range(monthTime):
+            text = beginDay.strftime("%m-%d")
+            scheduleid, scheduletitle = self.getDayScheduleTitle(str(year) + '-' + str(month) + '-' + str(day + 1),
+                                                                 self.targetTag)
+            # print scheduleid, scheduletitle
+            comBox = QListWidget()
+            newItem = QListWidgetItem(unicode(text))
 
-            if self.date.strftime("%Y-%m-%d")==strftime("%Y-%m-%d") and day==int(self.date.strftime("%d") )-1:
+            if self.date.strftime("%Y-%m-%d") == strftime("%Y-%m-%d") and day == int(self.date.strftime("%d")) - 1:
                 newItem.setBackground(QBrush(QColor(Qt.yellow)))
             newItem.setFlags(Qt.NoItemFlags)
             comBox.addItem(newItem)
-            otherschedule=[]
+            otherschedule = []
 
-            for i,title in enumerate(scheduletitle):
-                if i <2:
-                    if len(title)>18:
-                        title=title[:18]+'...'
-                    newItem= QListWidgetItem(unicode(title))
-                    newItem.setFont(QFont(FontType,FontSize))
+            for i, title in enumerate(scheduletitle):
+                if i < 3:
+                    if len(title) > 18:
+                        title = title[:18] + '...'
+                    newItem = QListWidgetItem(unicode(title))
+                    newItem.setFont(QFont(FontType, FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))
                     newItem.setBackground(self.getColor(scheduleid[i]))
                     comBox.addItem(newItem)
                 else:
                     otherschedule.append(scheduleid[i])
-            if len(otherschedule)>0:
-                newItem=QListWidgetItem(u"还有%d项..."%len(otherschedule))
-                newItem.setFont(QFont(FontType,FontSize))
-                status=''
+            if len(otherschedule) > 0:
+                newItem = QListWidgetItem(u"还有%d项..." % len(otherschedule))
+                newItem.setFont(QFont(FontType, FontSize))
+                status = ''
 
                 for item in otherschedule:
-                    status=status+str(item)+'-'
+                    status = status + str(item) + '-'
                 newItem.setStatusTip(status)
                 newItem.setBackground(self.getColor(-1))
                 comBox.addItem(newItem)
             comBox.itemDoubleClicked.connect(self.mouseDoubleClicked)
 
             comBox.setStyleSheet("QListWidget::item:selected:!active{background:none;color:#19649F;border-width:2px;}"
-                "QListWidget::Item:hover{background:skyblue;}"
-                "QListWidget::item:selected:active{background:none;color:#19649F;border-width:-1;}")
-            #grid.setCellWidget(0,3,comBox)
-            #tempDay=QTableWidgetItem(text)
-            tempCol=beginCol
-            tempRow=beginRow
-            #tempDay.setTextAlignment(Qt.AlignCenter)
-            
-            grid.setCellWidget(tempRow,tempCol,comBox)
+                                 "QListWidget::Item:hover{background:skyblue;}"
+                                 "QListWidget::item:selected:active{background:none;color:#19649F;border-width:-1;}")
+            # grid.setCellWidget(0,3,comBox)
+            # tempDay=QTableWidgetItem(text)
+            tempCol = beginCol
+            tempRow = beginRow
+            # tempDay.setTextAlignment(Qt.AlignCenter)
 
-            beginCol+=1
-            beginRow=beginRow+beginCol/7
-            beginCol=beginCol%7
-            beginDay=beginDay+timedelta(1)
+            grid.setCellWidget(tempRow, tempCol, comBox)
+
+            beginCol += 1
+            beginRow = beginRow + beginCol / 7
+            beginCol = beginCol % 7
+            beginDay = beginDay + timedelta(1)
 
         return grid
 
     def upPage(self):
-        if self.pageFlag=='w':
+        if self.pageFlag == 'w':
             self.grid.close()
-            self.grid=self.wupPage()
+            self.grid = self.wupPage()
             self.calendarLayout.addWidget(self.grid)
         else:
             self.grid.close()
-            self.grid=self.mupPage()
+            self.grid = self.mupPage()
             self.calendarLayout.addWidget(self.grid)
 
     def nextPage(self):
-        if self.pageFlag=='w':
+        if self.pageFlag == 'w':
             self.grid.close()
-            self.grid=self.wnextPage()
+            self.grid = self.wnextPage()
             self.calendarLayout.addWidget(self.grid)
 
         else:
             self.grid.close()
-            self.grid=self.mnextPage()
+            self.grid = self.mnextPage()
             self.calendarLayout.addWidget(self.grid)
-            
 
     def mupPage(self):
-        month=int(self.date.strftime('%m'))
-        year=int(self.date.strftime('%Y'))
-        if month==1:
-            year=year-1
-            month=12
+        month = int(self.date.strftime('%m'))
+        year = int(self.date.strftime('%Y'))
+        if month == 1:
+            year = year - 1
+            month = 12
         else:
-            month=month-1
-        self.date=self.date-timedelta(monthrange(year,month)[1])
+            month = month - 1
+        self.date = self.date - timedelta(monthrange(year, month)[1])
         return self.MonthGrid()
 
     def mnextPage(self):
-        month=int(self.date.strftime('%m'))
-        year=int(self.date.strftime('%Y'))
-        self.date=self.date+timedelta(monthrange(year,month)[1])
+        month = int(self.date.strftime('%m'))
+        year = int(self.date.strftime('%Y'))
+        self.date = self.date + timedelta(monthrange(year, month)[1])
         return self.MonthGrid()
 
-
-
     def wupPage(self):
-        self.date = self.date - timedelta(days= 7)
+        self.date = self.date - timedelta(days=7)
         return self.WeekGrid()
 
     def wnextPage(self):
 
-        self.date = self.date + timedelta(days= 7)
+        self.date = self.date + timedelta(days=7)
         return self.WeekGrid()
 
+
 def main():
+
     app = QApplication(sys.argv)
-    #mainPage = MainPage()
+    # mainPage = MainPage()
     talendar = Talendar()
     talendar.show()
     sys.exit(app.exec_())
@@ -2227,5 +3043,12 @@ def main():
 
 if __name__ == '__main__':
     main()
+    #TendDate = datetime.strptime('2017-12-25', '%Y-%m-%d')
+    #print TendDate.weekday()
+
+
+
+
+
 
 
