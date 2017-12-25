@@ -9,6 +9,7 @@ import logging
 import json
 import time
 import sys
+import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -20,6 +21,7 @@ def filter(s):
 	hour = str(int(s.split()[1].split(':')[0]))
 	minute = str(int(s.split()[1].split(':')[1]))
 	return date, hour, minute
+
 
 class GetTimetable(object):
 	def __init__(self, username, password):
@@ -114,7 +116,7 @@ class GetTimetable(object):
 					#print current_course_name, course_place, course_time_start, course_time_end, repeat_gap,repeat_times
 					#print current_course_teacher_name, current_course_teacher_email
 					course_info_list = [current_course_name, course_place, \
-					startDate, startHour, startMinute, endDate, endHour, endMinute, '0', '0', '30', [u'课程', u'', u'', u'', u''],\
+					startDate, startHour, startMinute, endDate, endHour, endMinute, '0', '0', '30', [u'课程', u'网络学堂', u'', u'', u''],\
 					"教师姓名："+current_course_teacher_name + "\r教师邮箱：" + current_course_teacher_email + "\r课程类型：" + records['skzc'] ,\
 					 [1, unicode(repeat_gap), [False, True, False], unicode(repeat_times), '1000-1-1', repeat_flag]]
 					class_list.append(course_info_list)
@@ -197,6 +199,10 @@ class WebLearningScraper(object):
 						
 						end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.mktime(time.strptime(tds[2].contents[0],"%Y-%m-%d")) + 86399))
 						endDate, endHour, endMinute = filter(end_time)
+						endtime = datetime.datetime(int(endDate.split('-')[0]), int(endDate.split('-')[1]), int(endDate.split('-')[2]))
+						now = datetime.datetime.now()
+						if (now-endtime).days>=3:
+							continue
 						startDate, startHour, startMinute = endDate, endHour, str(int(endMinute) - 1)
 						#submitted = ( '已经提交' in tds[3].contents[0])
 						soup = self.make_soup(detail_url)
@@ -206,7 +212,7 @@ class WebLearningScraper(object):
 							details = ""
 						#print name
 						homework_list.append([ name  + '：' + title, '', startDate, startHour, startMinute, endDate, endHour, endMinute,\
-						'0', '0', '30', [u'作业', u'DDL', u'', u'', u''], details, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
+						'0', '0', '30', [u'作业', u'网络学堂', u'DDL', u'', u''], details, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
 						 [False, False, False, False, False, False, False]]])
 			else:
 				continue
@@ -226,8 +232,12 @@ class WebLearningScraper(object):
 					endDate, endHour, endMinute = filter(homework_end_time)
 					startDate, startHour, startMinute = endDate, endHour, str(int(endMinute) - 1)
 					#print name
+					endtime = datetime.datetime(int(endDate.split('-')[0]), int(endDate.split('-')[1]), int(endDate.split('-')[2]))
+					now = datetime.datetime.now()
+					if (now-endtime).days>=3:
+						continue
 					homework_list.append([homework_course_name + '：' + homework_title, '', startDate, startHour, startMinute, endDate, endHour, endMinute,\
-						'0', '0', '30', [u'作业', u'DDL', u'', u'', u''], homework_detail, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
+						'0', '0', '30', [u'作业', u'网络学堂', u'DDL', u'', u''], homework_detail, [-1, u'-1', [False, False, False], u'-1', '1000-1-1',\
 						 [False, False, False, False, False, False, False]]])
 		return homework_list
 	
@@ -243,6 +253,14 @@ def main(username, password):
 		return info, homework
 	except:
 		return '!!!', '!!!'
+		
+
+	
+	'''info = GetTimetable(username, password).get_course_time()
+	homework = WebLearningScraper(username, password).courses()
+	#info = json.dumps(info ,ensure_ascii=False,indent = 4)
+	return info, homework'''
+	
 	#except:
 	#	return '!!!'
 	

@@ -748,8 +748,11 @@ class Add(QDialog):  # 新建事项窗口
             self.comboReminderUnit.setCurrentIndex(0)
 
     def AddTag(self):
-        self.numOfClicked += 1
-        self.tagGroup[self.numOfClicked - 1].setEnabled(True)
+        if self.numOfClicked == 5:
+            pass
+        else:
+            self.numOfClicked += 1
+            self.tagGroup[self.numOfClicked - 1].setEnabled(True)
 
     def newSubWindow(self):  # 新建事项窗口的接口,只用于创建子事件
         # f = open(r"data/list/new_son", 'w')
@@ -885,9 +888,10 @@ class Add(QDialog):  # 新建事项窗口
             return
 
     def DeleteTag(self):
-        self.tagGroup[self.numOfClicked - 1].setEnabled(False)
-        self.tagGroup[self.numOfClicked - 1].clear()
-        self.numOfClicked -= 1
+        if self.tagGroup[self.numOfClicked - 1].isEnabled():
+            self.tagGroup[self.numOfClicked - 1].setEnabled(False)
+            self.tagGroup[self.numOfClicked - 1].clear()
+            self.numOfClicked -= 1
 
     def CheckStartHour(self):
         try:
@@ -1350,6 +1354,15 @@ class Show(Add):
             if tags[i] != '':
                 self.tagGroup[i].setText(unicode(tags[i]))
                 self.tagGroup[i].setEnabled(True)
+                self.numOfClicked+=1
+        if '课程' in tags and '网络学堂' in tags:
+            self.tagGroup[tags.index('课程')].setEnabled(False)
+            self.tagGroup[tags.index('网络学堂')].setEnabled(False)
+        if '作业' in tags and '网络学堂' in tags:
+            self.tagGroup[tags.index('作业')].setEnabled(False)
+            self.tagGroup[tags.index('网络学堂')].setEnabled(False)
+
+
                 # self.repeatInfo.extend([comboUnit, frequency, radioSelected, endTimes, endDate, checkBoxGroup])
 
     def Repeat(self):  # 新建重复窗口
@@ -1618,7 +1631,10 @@ class UpdateWindow(QDialog):
             self.acceptDrops()
         else:
             info, homework = sync.main(username, password)
-            info.extend(homework)
+            print info
+            print homework
+
+
             #print len(info)
             #print len(homework)
             if info == '!!!':
@@ -1630,6 +1646,7 @@ class UpdateWindow(QDialog):
                 f.write(username + '\t' + password + '\t' + email)
                 f.close()
             #self.info = info
+            info.extend(homework)
             self.info = info
 
         self.accept()
@@ -1648,13 +1665,13 @@ class trayIcon(QSystemTrayIcon):
 
 
     def startCount(self):
-        self.timer.start(60000)
+        self.timer.start(6000)
 
 
 
     def initicon(self):         #托盘初始化
         #self.tray = QSystemTrayIcon() #创建系统托盘对象
-        self.icon = QIcon("./pic/logo-square-64.png")
+        self.icon = QIcon("./pic/logo-square-32.png")
         self.show()
 
         self.setIcon(self.icon)  #设置系统托盘图标
@@ -1673,10 +1690,29 @@ class trayIcon(QSystemTrayIcon):
         self.showMessage(u"测试", u"我是消息")
 
     def showM(self):
-        titleList=(u'我的DDL是01',u'我的DDL是02',u'我的DDL是03',u'我的DDL是58',u'我的DDL是59',u'我的DDL是60')
-        endDateList = (str('2017-12-24 17:10'), str('2017-12-24 17:11'), str('2017-12-24 17:12'), str('2017-12-24 17:13'), str('2017-12-24 17:14'), str('2017-12-24 17:15'))
-        remindTimeList =(30,30,30,30,30,30)#单位是分钟
+        titleList = []
+        endDateList = []
+        remindTimeList = []
+        info = getcompletelist()
+        for item in info:
+            id, title, loc, startTime, endTime, reminder, reminderUnit, \
+            reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+            checkBoxGroup, sonID, sonIDList, note = item
+            if reminder == '1':
+                titleList.append(unicode(title))
+                temp = startTime.split()
+                startTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
+                endDateList.append(startTime)
+                if reminderUnit == '0':
+                    remindTimeList.append(int(reminderNumber))
+                elif reminderUnit == '1':
+                    remindTimeList.append(int(reminderNumber) * 60)
+                elif reminderUnit == '2':
+                    remindTimeList.append(int(reminderNumber) * 1440)
+
+        #print titleList, endDateList, remindTimeList
         self.timenow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
+
         self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M')
         self.timeStamp = int(time.mktime(self.timeArray))
 
@@ -1688,7 +1724,7 @@ class trayIcon(QSystemTrayIcon):
             timeLeftStampTemp = timeDDL-self.timeStamp
 
             if(timeLeftStampTemp==remindTimeList[i]*60):
-                print(timeLeftStampTemp)
+                #print(timeLeftStampTemp)
                 message=u'【 '+titleList[i]+u'】 '+u"距离截止时间还有"+str(remindTimeList[i])+u"分钟！"
                 self.showMessage(u"提醒", message)
 
@@ -1738,12 +1774,17 @@ class Talendar(QWidget):  # 主界面
         self.rowNum = 24
         self.starttime=1
         self.filterFlag = 0
-        #self.ti = trayIcon(self)
-        #self.ti.show()
+        self.ti = trayIcon(self)
+        self.ti.show()
+
+        #info = getcompletelist()
+        #print info
+        #return
         # self.setWindowFlags(Qt.CustomizeWindowHint)
 
         # self.resize(695, 500)
         self.resize(920, 620)
+        self.center()
         # self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
         self.tableDict = {u'Mon': 0, u'Tue': 1, u'Wed': 2, u'Thu': 3, u'Fri': 4, u'Sat': 5, u'Sun': 6}
         self.pageFlag = 'm'
@@ -1771,8 +1812,10 @@ class Talendar(QWidget):  # 主界面
 
     def paintEvent(self, event):
         p = QPainter(self)
-
-        p.drawPixmap(0, 0, 920, 620, self.background)
+        if self.ddlFlag:
+            p.drawPixmap(0, 0, 1156, 620, self.background)
+        else:
+            p.drawPixmap(0, 0, 920, 620, self.background)
 
     def startCount(self):
         self.timer.start(60000)
@@ -1814,124 +1857,23 @@ class Talendar(QWidget):  # 主界面
 
     def update(self):
 
-
-        '''classes = get_class("sheet.xls")
-        #sync.main()
-        for cla in classes:
-            title, loc, startTime, endTime, _, _, tags, \
-            repeatUnit, repeatFre, radioSelected, endTimes, endDate, checkBoxGroup, note = cla
-
-            fname = "data/root/0_time_routine_ls"
-            fname_sonIDlist = "data/list/sonIDlist"
-            f_sonIDlist = open(fname_sonIDlist, 'w')
-            with open(fname, 'r') as f:
-                lines = f.readlines()
-                last_line = lines[-1]
-                penult_line = lines[-2]
-            list1 = last_line.split(' ')
-            list2 = penult_line.split(' ')
-            # print list1
-            # print list2
-            last_num = int(list1[0])
-            if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
-            f.close()
-            # if last_line[1] == '':
-            #    sonIDList.append(sonIDList[-1] + 1)
-            # elif last_line[1] != '':
-            #    sonIDList.append(last_num + 1)
-            f_sonIDlist.write('0' + ' ')
-            f_sonIDlist.write(str(last_num + 1) + '\n')
-            f_sonIDlist.close()
-            f = open(r"data/list/new", 'w')
-            list = ['-1', '\n', '-1', '\n', '[False, False, False]', '\n', '-1', '\n', '1000-0-0', '\n',
-                    '[False, False, False, False, False, False, False]', '\n']
-            f.writelines(list)
-            f.close()
-            startDate = startTime.split()[0]
-            startHour = startTime.split()[1].split(':')[0]
-            startMinute = startTime.split()[1].split(':')[1]
-            endDate = endTime.split()[0]
-            endHour = endTime.split()[1].split(':')[0]
-            endMinute = endTime.split()[1].split(':')[1]
-            name = title
-            reminder = 0
-            reminderUnit = 0
-            reminderNumber = '-1'
-
-            f_tags = open(r"data/root/tags", 'r')
-            tags_list = f_tags.readlines()
-            f_tags.close()
-            f_tags = open(r"data/root/tags", 'w')
-            f_tags.writelines(tags_list)
-
-            filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
-            flag = False
-            tags = tags.split(",")
-
-            for i in range(5):
-                if tags[i] != '':
-                    for j in range(tags_list.__len__()):
-                        if str(tags[i]) == tags_list[j].replace('\n', ''):
-                            flag = True
-                    if not flag:
-                        f_tags.write(str(tags[i]) + '\n')
-                    tag_filename = 'data/root/' + tags[i]
-                    f_special_tags = open(tag_filename.decode('utf-8'), 'a')
-                    f_special_tags.write(
-                        str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                        + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-                    f_special_tags.close()
-            f_tags.close()
-            # repeatInfo = addWindow.repeatParameters
-            # sonIDList = addWindow.sonIDList
-            # 给父级事件赋子事件
-            note_path = 'data/note/' + str(last_num + 1)
-            path = 'data/list/' + filename
-            f_notefile = open(note_path, 'w')
-            f_notefile.write(note)
-            f_notefile.close()
-            f = open(path, 'w')
-            f.write(str(last_num + 1) + '\n')
-            f.write(name + '\n')
-            f.write(loc + '\n')
-            f.write(startDate + ' ' + startHour + ' ' + startMinute + '\n')
-            f.write(endDate + ' ' + endHour + ' ' + endMinute + '\n')
-            f.write(str(reminder) + '\n')
-            f.write(str(reminderUnit) + '\n')
-            f.write(reminderNumber + '\n')
-            for i in range(5):
-                f.write(str(tags[i]) + ',')
-            f.write('\n')
-            f_repeat = open(r"data/list/new", 'r')
-            repeat_list = f_repeat.readlines()
-            f_repeat.close()
-            f.writelines(repeat_list)
-            f_sonIDlist = open(fname_sonIDlist, 'r')
-            son_list = f_sonIDlist.readlines()
-            # print son_list
-            f.writelines(son_list)
-            f_sonIDlist.close()
-            os.remove(fname_sonIDlist)
-            os.remove(r'data/list/new')
-            f.close()
-            # f_time_routine = open(r"data/root/0_time_routine_ls", 'r')
-            # time_routine_list = f_time_routine.readlines()
-            # time_routine_list.insert(last_num+1,str(last_num+1)+' '+filename)
-            # f_time_routine.close()
-            f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
-            f_time_routine.write(str(last_num + 1) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                                 + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-            # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
-            # print repeatInfo
-            f_time_routine.close()
-        warn = Warn('同步完成')
-        if warn.exec_():
-            return'''
         updatewindow = UpdateWindow()
         if updatewindow.exec_():
             info = updatewindow.info
-            print info
-            print len(info)
+
+            IDList = []
+
+            oldinfo = getcompletelist()
+            for item in oldinfo:
+                id, title, loc, startTime, endTime, reminder, reminderUnit, \
+                reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+                checkBoxGroup, sonID, sonIDList, note = item
+                if '网络学堂' in tags.split(','):
+                  remove(id)
+
+
+            #print info
+            #print len(info)
             for item in info:
                 #print item
                 fname = "data/root/0_time_routine_ls"
@@ -2015,6 +1957,29 @@ class Talendar(QWidget):  # 主界面
         # self.mainLayout.addLayout(self.topLayout,0,1)
         # self.topLayout.setMaximumWidth(20)
         self.mainLayout.addLayout(self.tempLayout, 0, 1)
+
+        #self.resize(1156, 620)
+        #self.initDDL()
+        #self.rightLayout.addWidget(self.DDL)
+
+        self.rightLayout = QVBoxLayout()
+
+        self.righttopLayout = QHBoxLayout()
+        self.righttopLayout.addStretch(1)
+        self.rightbtnClose = QPushButton()
+        self.rightbtnClose.setFixedSize(25, 25)
+        self.rightbtnClose.setStyleSheet("border-image:url(./pic/close_big.png)")
+        self.rightbtnClose.clicked.connect(self.close)
+        self.righttopLayout.addWidget(self.rightbtnClose)
+        self.rightLayout.addLayout(self.righttopLayout)
+
+        self.rightLayout.setSpacing(17)
+        self.rightLayout.setContentsMargins(0, 7, 15, 0)
+        self.mainLayout.addLayout(self.rightLayout, 0, 2)
+        self.mainLayout.setColumnStretch(1, 2)
+        self.initDDL()
+        self.DDL.hide()
+        self.rightbtnClose.hide()
 
     def targetCourse(self):
         self.targetTag = '课程'
@@ -2135,48 +2100,45 @@ class Talendar(QWidget):  # 主界面
         # self.leftLayout.setColumnStretch(0, 1)
 
     def initDDL(self):
-        self.DDL = QTableWidget(5, 1)
-        # self.DDL.setRowCount(6)
 
-        self.DDL.setColumnWidth(0, 250)
-        self.DDL.setRowHeight(0, 100)
-        self.DDL.setRowHeight(1, 100)
-        self.DDL.setRowHeight(2, 100)
-        self.DDL.setRowHeight(3, 100)
-        self.DDL.setRowHeight(4, 100)
-        self.DDL.setFrameShadow(QFrame.Plain)
-        # self.DDL.setRowHeight(5,100)
-        self.DDL.setHorizontalHeaderLabels([u'DDL列表'])
-        self.timenow = time.strftime('%Y-%m-%d %H:%M', time.localtime())
-        self.timeArray = time.strptime(self.timenow, '%Y-%m-%d %H:%M')
-        self.timeStamp = int(time.mktime(self.timeArray))
-        # print self.timeStamp
-        # timeLeft = time.localtime(timeLeftStamp)
-        # timeLeftStr=time.strftime('%Y-%m-%d %H:%M:%S',timeLeft)
-        items = getcompletelist()
+
         titleList = []
         endDateList = []
-        for item in items:
-            if len(item) == 17:
-                id, title, loc, startTime, endTime, reminder, reminderUnit, \
-                reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-                checkBoxGroup, sonID, note = item
-            elif len(item) == 18:
-                id, title, loc, startTime, endTime, reminder, reminderUnit, \
-                reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
-                checkBoxGroup, sonID, sonIDList, note = item
-            if int(reminder) == 1:
+        info = getcompletelist()
+        for item in info:
+            id, title, loc, startTime, endTime, reminder, reminderUnit, \
+            reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+            checkBoxGroup, sonID, sonIDList, note = item
+            if 'DDL' in tags.split(','):
                 titleList.append(unicode(title))
                 temp = endTime.split()
                 endTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
                 endDateList.append(endTime)
-        # item=(u'我的DDL是12-20',u'我的DDL是12-10',u'我的DDL是12-13',u'我的DDL是12-17',u'我的DDL是12-7',u'我的DDL是12-6')
-        # deadLine = (str('2017-12-20 23:59'),str('2017-12-10 23:59'),str('2017-12-13 23:59'),str('2017-12-17 23:59'),str('2017-12-7 23:59'),str('2017-12-6 23:59'))
+
+        row = len(endDateList)
+        self.newDDL = QTableWidget(row, 1)
+        try:
+            self.rightLayout.removeWidget(self.DDL)  # self.DDL.setRowCount(6)
+        except:
+            pass
+        self.DDL = self.newDDL
+        self.rightLayout.addWidget(self.DDL)
+
+
+        self.DDL.setColumnWidth(0, 220)
+        for i in range(row):
+            self.DDL.setRowHeight(i, 100)
+        self.DDL.setFrameShadow(QFrame.Plain)
+        self.DDL.setHorizontalHeaderLabels([u'DDL列表'])
+        self.timenow = time.strftime('%Y-%m-%d %H:%M', time.localtime())
+        self.timeArray = time.strptime(self.timenow, '%Y-%m-%d %H:%M')
+        self.timeStamp = int(time.mktime(self.timeArray))
+
         flag = [i for i in range(len(titleList))]
         flag.append(0)
         # flag =[0,1,2,0,0,0]#最后一位是为了移动方便，其实不用这个
         timeStampMax = 15778116610
-        timeLeftStamp = [timeStampMax, timeStampMax, timeStampMax, timeStampMax, timeStampMax, timeStampMax]
+        timeLeftStamp = [timeStampMax for i in range(row+1)]
         for i in range(len(titleList)):
             timeddl = time.strptime(endDateList[i], '%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
@@ -2199,7 +2161,7 @@ class Talendar(QWidget):  # 主界面
     def initDDLItem(self, item, deadLine):
         self.DDLItem = QTableWidget(3, 1)
 
-        self.DDLItem.setColumnWidth(0, 200)
+        self.DDLItem.setColumnWidth(0, 150)
 
         self.DDLItem.setRowHeight(1, 30)
         self.DDLItem.setRowHeight(2, 30)
@@ -2245,24 +2207,28 @@ class Talendar(QWidget):  # 主界面
     def updateDDL(self):
         # print self.ddlFlag
         if self.ddlFlag:
-            self.resize(1156, 600)
+            self.resize(1162, 620)
             self.initDDL()
-            self.mainLayout.addWidget(self.DDL, 0, 2)
-            self.mainLayout.setColumnStretch(1, 2)
-
-            # self.mainLayout.setColumnStretch(1, 5);
-            # self.mainLayout. setColumnStretch(1, 2);
-            # self.mainLayout.setColumnStretch(10, 2);
+            self.DDL.show()
+            self.rightbtnClose.show()
+            self.btnClose.hide()
+            self.center()
+            self.background.load("./pic/bigwindow.png")
 
         else:
-            try:
-                # print 'here'
-                self.DDL.close()
-                # self.DDL.destroy()
-                self.resize(880, 600)
-            except:
-                #   #print 'here2'
-                pass
+            self.resize(920, 620)
+            self.DDL.hide()
+            self.rightbtnClose.hide()
+            self.btnClose.show()
+            self.center()
+
+            self.background.load("./pic/mainwindow.png")
+
+
+
+            # def DropSha
+
+
 
     def showDDL(self):
         self.reverseDDLFlag()
