@@ -2850,33 +2850,66 @@ class Talendar(QWidget):  # 主界面
         else:
             IDs = IDs[0]
             showWindow = Show(IDs)
+            detail = details(IDs)
+            d_endtime_list = detail[4].split()
             if showWindow.exec_():
 
                 if showWindow.flag == 1:
-                    #print 'twinkle'
+                    # print 'twinkle'
                     self.twinkle(showWindow.sonIDList[1:])
                     # self.twinkle(showWindow.sonIDList)
                 if showWindow.deleteflag == 1:
                     pass
                 else:
-
-                    fname = "data/root/0_time_routine_ls"
-                    fname_sonIDlist = "data/list/sonIDlist"
-                    f_sonIDlist = open(fname_sonIDlist, 'w')
-                    with open(fname, 'r') as f:
-                        lines = f.readlines()
-                        last_line = lines[-1]
-                        penult_line = lines[-2]
-                    list1 = last_line.split(' ')
-                    list2 = penult_line.split(' ')
-                    last_num = int(list1[0])
-                    if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
+                    new_list = getinfo(showWindow)
+                    new_filename = IDs + '$$' + new_list[5] + '$$' + new_list[6]
+                    new_path = 'data/list/' + new_filename
+                    f = open(r"data/root/0_time_routine_ls", 'r')
+                    lists = f.readlines()
                     f.close()
-                    f_sonIDlist.write('0' + '\n')
-                    f_sonIDlist.write(str(last_num + 1) + ',')
-                    f_sonIDlist.close()
-
-                    save(getinfo(showWindow), last_num, fname_sonIDlist)
+                    f = open(r"data/root/0_time_routine_ls", 'w')
+                    for i in range(len(lists)):
+                        lists[i] = lists[i].replace('\n', '')
+                        temp_list = lists[i].split(' ')
+                        if IDs == temp_list[0]:
+                            filename_list = temp_list[2].split('-')
+                            old_filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + filename_list[2] + '$$' + filename_list[3]
+                            new_item = IDs + ' ' + new_list[2] + '-' + new_list[3] + '-' + new_list[4] + ' ' + new_list[
+                                5] + '-' + new_list[6] + '-' + new_list[7] + ' ' + new_list[0]
+                            lists[i] = new_item
+                        f.write(lists[i] + '\n')
+                    f.close()
+                    old_path = 'data/list/' + old_filename
+                    os.remove(old_path)
+                    fnew = open(new_path, 'w')
+                    fnew.write(str(IDs) + '\n')
+                    fnew.write(new_list[0] + '\n')
+                    fnew.write(new_list[1] + '\n')
+                    fnew.write(new_list[2] + new_list[3] + new_list[4] + '\n')
+                    fnew.write(new_list[5] + new_list[6] + new_list[7] + '\n')
+                    fnew.write(str(new_list[8]) + '\n')
+                    fnew.write(str(new_list[9]) + '\n')
+                    fnew.write(new_list[10] + '\n')
+                    for i in range(5):
+                        fnew.write(str(new_list[11][i]) + ',')
+                    fnew.write('\n')
+                    if new_list[12]:
+                        f.write('-1' + '\n')
+                        f.write('-1' + '\n')
+                        f.write('[False, False, False]' + '\n')
+                        f.write('-1' + '\n')
+                        f.write('1000-1-1' + '\n')
+                        f.write('[False, False, False, False, False, False, False]' + '\n')
+                    else:
+                        for i in range(6):
+                            f.write(str(new_list[12]) + '\n')
+                    fnew.write(detail[15] + '\n')
+                    fnew.write(detail[16] + '\n')
+                    fnew.close()
+                    note_path = 'data/list/' + IDs
+                    fnote = open(note_path, 'w')
+                    fnote.write(new_list[13])
+                    fnote.close()
                     remove(IDs)
                 self.refresh()
                 return
