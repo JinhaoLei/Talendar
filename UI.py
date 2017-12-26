@@ -2,6 +2,7 @@
 
 import sys
 import sync
+import tx
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from time import time, localtime, strftime
@@ -26,6 +27,40 @@ pic_dir = "./pic/"
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+def updateToS():
+    try:
+        f = open('./data/user.csv')
+    except:
+        return -1
+    s = f.readline()
+    email = s.split('\t')[-1]
+    info = getcompletelist()
+    infolist = ''
+    for item in info:
+        #print item
+        id, title, loc, startTime, endTime, reminder, reminderUnit, \
+        reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
+        checkBoxGroup, sonID, sonIDList, note = item
+        #print reminder
+        if reminder == '2':
+            print 'here'
+            tag = tags.split(',')
+            if 'DDL' in tag:
+                ddlFlag = '1'
+            else:
+                ddlFlag = '0'
+            infolist += title + '\t' + loc + '\t' + startTime + '\t' + endTime \
+                        + '\t' + tags + '\t' + reminderUnit + '\t' + reminderNumber + '\t' + ddlFlag + '\t' + email + '\t' + note + '$$'
+            #print infolist
+    if len(infolist) > 1:
+        try:
+            tx.main(infolist)
+        except:
+            #print 'wrong'
+            return -2
+    else:
+        pass
+    return 0
 
 def getfont():
     font = QFont()
@@ -50,6 +85,7 @@ def details(ID):
     for i in range(len(lists)):
         lists[i] = lists[i].replace('\n', '')
         temp_list = lists[i].split(' ')
+        #print temp_list
         # print temp_list, ID
         # print temp_list[0], ID
         if ID == temp_list[0]:
@@ -143,7 +179,7 @@ def remove(ID):
                     break
             if len(tag_list):
                 f = open(tag_path.decode('utf-8').encode('gbk'), 'w')
-                print tag_list
+                #print tag_list
                 f.writelines(tag_list)
                 f.close()
             else:
@@ -216,9 +252,11 @@ def getinfo(addWindow):
     name = addWindow.editTitle.text()
     location = addWindow.editLoc.text()
     startDate = addWindow.editStartDate.text()
+    startDate = filter(str(startDate))
     startHour = addWindow.editStartHour.text()
     startMinute = addWindow.editStartMinute.text()
     endDate = addWindow.editEndDate.text()
+    endDate = filter(str(endDate))
     endHour = addWindow.editEndHour.text()
     endMinute = addWindow.editEndMinute.text()
     reminder = addWindow.comboReminder.currentIndex()
@@ -227,10 +265,42 @@ def getinfo(addWindow):
     tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
     note = addWindow.editNote.toPlainText()
     repeatInfo = addWindow.repeatParameters
+    if name == '':
+        name = 'None'
+
+    if location == '':
+        location = 'None'
+
+    if startDate == '':
+        startDate = '1000-1-1'
+    else:
+        startDate = filter(str(startDate))
+
+    if startHour == '':
+        startHour = '25'
+
+    if startMinute == '':
+        startMinute = '61'
+
+    if endDate == '':
+        endDate = '1000-1-1'
+    else:
+        endDate = filter(str(endDate))
+
+    if endHour == '':
+        endHour = '25'
+
+    if endMinute == '':
+        endMinute = '61'
+
+    if note == '': note = 'None'
+
+    if reminderNumber == '':
+        reminderNumber = '-1'
     return [name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo]
 
 def save(info_list, last_num, fname_sonIDlist):
-    print info_list
+    #print info_list
     #print len(info_list)
     name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo = info_list
 
@@ -274,7 +344,7 @@ def save(info_list, last_num, fname_sonIDlist):
     f_tags.writelines(tags_list)
     filename = str(last_num + 1) + '$$' + str(endDate) + '$$' + str(endHour)
     flag = False
-    print tags
+    #print tags
     for i in range(5):
         if tags[i] != '':
             for j in range(tags_list.__len__()):
@@ -289,7 +359,7 @@ def save(info_list, last_num, fname_sonIDlist):
             f_special_tags.close()
     f_tags.close()
 
-    print repeatInfo
+    #print repeatInfo
     # sonIDList = addWindow.sonIDList
     # 给父级事件赋子事件
     note_path = 'data/note/' + str(last_num + 1)
@@ -356,7 +426,7 @@ def filter(s):
     if re.match(r"(\d{4}-\d{1,2}-\d{1,2})", s):
         return s
     date = s.split()
-    print date
+    #print date
     month = date[-3].replace('月', '')
     weekdays = {'周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7}
     weekday = weekdays[date[0]]
@@ -636,7 +706,7 @@ class calendarLineEdit(QLineEdit):  # 点击会出现日历选择的编辑条
 class Warn(QDialog):
     def __init__(self, s):
         super(Warn, self).__init__()
-
+        #print 'warn!@'
         self.btn = QPushButton()
         self.text = QLabel(unicode(s))
         self.text.setStyleSheet('color:white')
@@ -663,7 +733,7 @@ class Warn(QDialog):
         #self.btn.setAlignment(Qt.AlignCenter)
         self.text.setAlignment(Qt.AlignCenter)
         self.layout.setAlignment(Qt.AlignHCenter)
-        self.setFixedSize(140, 90)
+        self.setFixedSize(240, 90)
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.background = QPixmap()
@@ -674,7 +744,7 @@ class Warn(QDialog):
     def paintEvent(self, event):
         p = QPainter(self)
 
-        p.drawPixmap(0, 0, 140, 90, self.background)
+        p.drawPixmap(0, 0, 240, 90, self.background)
 
 
 class Add(QDialog):  # 新建事项窗口
@@ -778,7 +848,7 @@ class Add(QDialog):  # 新建事项窗口
                 sonNum = parents_number + 1
             else:
                 # list2 = last_line.split(',')
-                print list3
+                #print list3
                 elder = int(list3[-2])
                 sonNum = elder + 1
             f_sonIDlist.close()
@@ -787,7 +857,7 @@ class Add(QDialog):  # 新建事项窗口
             f_sonIDlist.write(str(parents_number) + ',')
             for i in range(parents_number + 1, sonNum + 1):
                 f_sonIDlist.write(str(i) + ',')
-                print i
+                #print i
             f_sonIDlist.close()
             name = addWindow.editTitle.text()
             if name == '': name = 'None'
@@ -1305,12 +1375,12 @@ class Show(Add):
             self.acceptDrops()'''
 
     def showInfo(self, infoList):
-
+        #print infoList
         id, title, loc, startTime, endTime, reminder, reminderUnit, \
         reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
         checkBoxGroup, sonID, sonIDList, note = infoList
         self.sonIDList = sonIDList[:-1].split(",")
-        print infoList
+        #print infoList
         self.id = id
 
         # self.currentDate = startTime.split()[0]
@@ -1631,8 +1701,8 @@ class UpdateWindow(QDialog):
             self.acceptDrops()
         else:
             info, homework = sync.main(username, password)
-            print info
-            print homework
+            #print info
+            #print homework
 
 
             #print len(info)
@@ -1665,7 +1735,7 @@ class trayIcon(QSystemTrayIcon):
 
 
     def startCount(self):
-        self.timer.start(6000)
+        self.timer.start(60000)
 
 
 
@@ -2205,7 +2275,6 @@ class Talendar(QWidget):  # 主界面
             self.ddlFlag = True
 
     def updateDDL(self):
-        # print self.ddlFlag
         if self.ddlFlag:
             self.resize(1162, 620)
             self.initDDL()
@@ -2276,7 +2345,21 @@ class Talendar(QWidget):  # 主界面
         addWindow = Add()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
             save(getinfo(addWindow), last_num, fname_sonIDlist)
-            self.refresh()
+            update = updateToS()
+            if update == -1:
+                warn = Warn('未预留邮箱信息！')
+                self.refresh()
+                if warn.exec_():
+                    return
+            elif update == -2:
+                warn = Warn('网络异常，邮件提醒不工作')
+                self.refresh()
+                if warn.exec_():
+                    return
+            else:
+                self.refresh()
+                pass
+
 
             return
 
@@ -2586,7 +2669,7 @@ class Talendar(QWidget):  # 主界面
                             weekday = TendDate.weekday()
                             if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
                                 delta = TendDate - TstartDate
-                                if delta.days % (7 * repeatfren) < 7 :
+                                if delta.days % (7 * repeatfren) < 7:
                                     IDlist.append(temp[0])
                                     Namelist.append(temp[3])
                         elif endtype == 1:  # 按照周重复一定的次数
@@ -2885,32 +2968,31 @@ class Talendar(QWidget):  # 主界面
                     fnew.write(str(IDs) + '\n')
                     fnew.write(new_list[0] + '\n')
                     fnew.write(new_list[1] + '\n')
-                    fnew.write(new_list[2] + new_list[3] + new_list[4] + '\n')
-                    fnew.write(new_list[5] + new_list[6] + new_list[7] + '\n')
+                    fnew.write(new_list[2] + ' ' + new_list[3] + ' ' + new_list[4] + '\n')
+                    fnew.write(new_list[5] + ' ' + new_list[6] + ' ' + new_list[7] + '\n')
                     fnew.write(str(new_list[8]) + '\n')
                     fnew.write(str(new_list[9]) + '\n')
                     fnew.write(new_list[10] + '\n')
                     for i in range(5):
                         fnew.write(str(new_list[11][i]) + ',')
                     fnew.write('\n')
-                    if new_list[12]:
-                        f.write('-1' + '\n')
-                        f.write('-1' + '\n')
-                        f.write('[False, False, False]' + '\n')
-                        f.write('-1' + '\n')
-                        f.write('1000-1-1' + '\n')
-                        f.write('[False, False, False, False, False, False, False]' + '\n')
+                    if new_list[13] == []:
+                        fnew.write(detail[9] + '\n')
+                        fnew.write(detail[10] + '\n')
+                        fnew.write(detail[11] + '\n')
+                        fnew.write(detail[12] + '\n')
+                        fnew.write(detail[13] + '\n')
+                        fnew.write(detail[14] + '\n')
                     else:
                         for i in range(6):
-                            f.write(str(new_list[12]) + '\n')
+                            fnew.write(str(new_list[13][i]) + '\n')
                     fnew.write(detail[15] + '\n')
                     fnew.write(detail[16] + '\n')
                     fnew.close()
-                    note_path = 'data/list/' + IDs
+                    note_path = 'data/note/' + IDs
                     fnote = open(note_path, 'w')
-                    fnote.write(new_list[13])
+                    fnote.write(new_list[12])
                     fnote.close()
-                    remove(IDs)
                 self.refresh()
                 return
 
@@ -2983,7 +3065,7 @@ class Talendar(QWidget):  # 主界面
                 if i < 3:
                     if len(title) > 18:
                         title = title[:18] + '...'
-                    print title
+                    #print title
                     newItem = QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType, FontSize))
                     newItem.setStatusTip(str(scheduleid[i]))
@@ -3080,8 +3162,8 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #TendDate = datetime.strptime('2017-12-25', '%Y-%m-%d')
-    #print TendDate.weekday()
+
+
 
 
 
