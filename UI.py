@@ -85,7 +85,6 @@ def details(ID):
     for i in range(len(lists)):
         lists[i] = lists[i].replace('\n', '')
         temp_list = lists[i].split(' ')
-        #print temp_list
         # print temp_list, ID
         # print temp_list[0], ID
         if ID == temp_list[0]:
@@ -123,8 +122,10 @@ def getlist():
 
 def get_tag_list(tag):
     path = u'data/root/'.encode('utf-8') + tag
-
-    f = open(path.decode('utf8'), 'r')
+    try:
+        f = open(path.decode('utf8'), 'r')
+    except:
+        return []
     lists = f.readlines()
     for i in range(lists.__len__()):
         lists[i] = lists[i].replace('\n', '')
@@ -256,7 +257,7 @@ def getinfo(addWindow):
     startHour = addWindow.editStartHour.text()
     startMinute = addWindow.editStartMinute.text()
     endDate = addWindow.editEndDate.text()
-    endDate = filter(str(endDate))
+    startDate = filter(str(startDate))
     endHour = addWindow.editEndHour.text()
     endMinute = addWindow.editEndMinute.text()
     reminder = addWindow.comboReminder.currentIndex()
@@ -265,6 +266,7 @@ def getinfo(addWindow):
     tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
     note = addWindow.editNote.toPlainText()
     repeatInfo = addWindow.repeatParameters
+
     if name == '':
         name = 'None'
 
@@ -297,45 +299,13 @@ def getinfo(addWindow):
 
     if reminderNumber == '':
         reminderNumber = '-1'
+
     return [name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo]
 
 def save(info_list, last_num, fname_sonIDlist):
     #print info_list
     #print len(info_list)
     name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, reminder, reminderUnit, reminderNumber, tags, note, repeatInfo = info_list
-
-    if name == '':
-        name = 'None'
-
-    if location == '':
-        location = 'None'
-
-    if startDate == '':
-        startDate = '1000-1-1'
-    else:
-        startDate = filter(str(startDate))
-
-    if startHour == '':
-        startHour = '25'
-
-    if startMinute == '':
-        startMinute = '61'
-
-    if endDate == '':
-        endDate = '1000-1-1'
-    else:
-        endDate = filter(str(endDate))
-
-    if endHour == '':
-        endHour = '25'
-
-    if endMinute == '':
-        endMinute = '61'
-
-    if note == '': note = 'None'
-
-    if reminderNumber == '':
-        reminderNumber = '-1'
 
     f_tags = open(r"data/root/tags", 'r')
     tags_list = f_tags.readlines()
@@ -346,11 +316,13 @@ def save(info_list, last_num, fname_sonIDlist):
     flag = False
     #print tags
     for i in range(5):
+        flag = False
         if tags[i] != '':
             for j in range(tags_list.__len__()):
                 if str(tags[i]) == tags_list[j].replace('\n', ''):
                     flag = True
             if not flag:
+                #print tags[]
                 f_tags.write(str(tags[i]) + '\n')
             tag_filename = 'data/root/' + tags[i]
             f_special_tags = open(tag_filename.decode('utf-8'), 'a')
@@ -595,14 +567,6 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.topHLayout = QHBoxLayout()
         self.topHLayout.addLayout(self.topLayout)
         self.topHLayout.addStretch()
-        # topSpace = QSpacerItem(200, 1)
-        # self.topLayout.addItem(topSpace, 0, 2)
-        # self.topLayout.setColumnStretch(0, 5)
-        # self.topLayout.setColumnStretch(1, 1)
-        # self.topLayout.setColumnStretch(2, 5)
-        # self.topLayout.setColumnStretch(0, 1)
-        # self.topLayout.setColumnStretch(1, 3)
-
         self.middleLayout.addWidget(lblEnd, 0, 0)
         self.middleLayout.addWidget(self.radioNever, 0, 1)
         self.middleLayout.addWidget(lblNever, 0, 2)
@@ -645,7 +609,7 @@ class RepeatWindow(QDialog):  # 勾选重复按钮后，弹出的重复设置
         self.btnClose = QPushButton()
         self.btnClose.setFixedSize(15, 15)
 
-        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.setStyleSheet("QPushButton{border-image:url(./pic/close.png)}""QPushButton:hover{border-image:url(./pic/close-hover.png)}")
         self.btnClose.clicked.connect(self.close)
 
         self.topBarLayout = QHBoxLayout()
@@ -1148,7 +1112,7 @@ class Add(QDialog):  # 新建事项窗口
         self.btnClose = QPushButton()
         self.btnClose.setFixedSize(15, 15)
 
-        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.setStyleSheet("QPushButton{border-image:url(./pic/close.png)}""QPushButton:hover{border-image:url(./pic/close-hover.png)}")
         self.btnClose.clicked.connect(self.close)
 
         self.topBarLayout = QHBoxLayout()
@@ -1232,7 +1196,7 @@ class Add(QDialog):  # 新建事项窗口
         btnYes = QPushButton()
         btnYes.setFixedSize(75, 20)
         btnYes.setStyleSheet("QPushButton{border-image:url(./pic/yes.png)}""QPushButton:hover{border-image:url(./pic/yes-hover.png)}")
-        btnYes.clicked.connect(self.accept)
+        btnYes.clicked.connect(self.Check)
 
         btnNo = QPushButton()
         btnNo.setFixedSize(75, 20)
@@ -1258,6 +1222,7 @@ class Add(QDialog):  # 新建事项窗口
         self.mainLayout.setSpacing(10)
         self.mainLayout.setColumnStretch(1, 20)
         self.mainLayout.addLayout(self.topLayout, 0, 0)'''
+
 
 
 class deleteItem(QDialog):
@@ -1375,7 +1340,7 @@ class Show(Add):
             self.acceptDrops()'''
 
     def showInfo(self, infoList):
-        #print infoList
+
         id, title, loc, startTime, endTime, reminder, reminderUnit, \
         reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
         checkBoxGroup, sonID, sonIDList, note = infoList
@@ -1528,9 +1493,10 @@ class otherTag(QDialog):
     def check(self):
         tag = self.edit.text()
         tagList = getTagList()
+        print tagList
         # print unicode(tagList[0]), unicode(tagList[1])
         # print tag
-        if unicode(tag) in tagList:
+        if unicode(tag) in tagList or tag in tagList:
             self.accept()
             self.tag = tag
         else:
@@ -1540,7 +1506,7 @@ class otherTag(QDialog):
 
 
 class multiItem(QDialog):
-    def __init__(self, IDs):
+    def __init__(self, IDs, mainwindow):
         super(multiItem, self).__init__()
         self.IDs = IDs
         self.setWindowFlags(Qt.FramelessWindowHint)
@@ -1550,14 +1516,97 @@ class multiItem(QDialog):
         pal.setColor(self.backgroundRole(), QColor(55, 62, 150))
         self.setPalette(pal)
         self.show()
+        self.mainwindow = mainwindow
 
-    def showDetail(self, id):
+    def showDetail(self, IDs):
         # print id
-        showWindow = Show(id)
+        showWindow = Show(IDs)
         if showWindow.exec_():
-            print "经过"
-            self.accept()
-            return
+            #print "经过"
+            detail = details(IDs)
+            self.close()
+
+            if showWindow.flag == 1:
+                # print 'twinkle'
+                self.mainwindow.twinkle(showWindow.sonIDList[1:])
+                # self.refresh()
+                return
+                # self.twinkle(showWindow.sonIDList)
+            if showWindow.deleteflag == 1:
+                self.mainwindow.refresh()
+                return
+            else:
+
+                new_list = getinfo(showWindow)
+                new_filename = IDs + '$$' + new_list[5] + '$$' + new_list[6]
+                new_path = 'data/list/' + new_filename
+                f = open(r"data/root/0_time_routine_ls", 'r')
+                lists = f.readlines()
+                f.close()
+                f = open(r"data/root/0_time_routine_ls", 'w')
+                for i in range(len(lists)):
+                    lists[i] = lists[i].replace('\n', '')
+                    temp_list = lists[i].split(' ')
+                    if IDs == temp_list[0]:
+                        filename_list = temp_list[2].split('-')
+                        old_filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + \
+                                       filename_list[2] + '$$' + filename_list[3]
+                        new_item = IDs + ' ' + new_list[2] + '-' + new_list[3] + '-' + new_list[4] + ' ' + new_list[
+                            5] + '-' + new_list[6] + '-' + new_list[7] + ' ' + new_list[0]
+                        lists[i] = new_item
+                    f.write(lists[i] + '\n')
+                f.close()
+                old_path = 'data/list/' + old_filename
+                os.remove(old_path)
+                fnew = open(new_path, 'w')
+                fnew.write(str(IDs) + '\n')
+                fnew.write(new_list[0] + '\n')
+                fnew.write(new_list[1] + '\n')
+                fnew.write(new_list[2] + ' ' + new_list[3] + ' ' + new_list[4] + '\n')
+                fnew.write(new_list[5] + ' ' + new_list[6] + ' ' + new_list[7] + '\n')
+                fnew.write(str(new_list[8]) + '\n')
+                fnew.write(str(new_list[9]) + '\n')
+                fnew.write(new_list[10] + '\n')
+                for i in range(5):
+                    fnew.write(str(new_list[11][i]) + ',')
+                fnew.write('\n')
+                if new_list[13] == []:
+                    fnew.write(detail[9] + '\n')
+                    fnew.write(detail[10] + '\n')
+                    fnew.write(detail[11] + '\n')
+                    fnew.write(detail[12] + '\n')
+                    fnew.write(detail[13] + '\n')
+                    fnew.write(detail[14] + '\n')
+                else:
+                    for i in range(6):
+                        fnew.write(str(new_list[13][i]) + '\n')
+                fnew.write(detail[15] + '\n')
+                fnew.write(detail[16] + '\n')
+                fnew.close()
+                note_path = 'data/note/' + IDs
+                fnote = open(note_path, 'w')
+                fnote.write(new_list[12])
+                fnote.close()
+
+                # remove(IDs)
+
+                # save(getinfo(addWindow), last_num, fname_sonIDlist)
+                update = updateToS()
+                if update == -1:
+                    warn = Warn('未预留邮箱信息！')
+                    self.mainwindow.refresh()
+                    if warn.exec_():
+                        return
+                elif update == -2:
+                    warn = Warn('网络异常，无法同步到服务器')
+                    self.mainwindow.refresh()
+                    if warn.exec_():
+                        return
+                else:
+                    self.mainwindow.refresh()
+                    return
+            #self.accept()
+            #return
 
     def initLayout(self):
         self.layout = QVBoxLayout(self)
@@ -1566,7 +1615,7 @@ class multiItem(QDialog):
         self.btnClose = QPushButton()
         self.btnClose.setFixedSize(15, 15)
 
-        self.btnClose.setStyleSheet("border-image:url(./pic/close.png)")
+        self.btnClose.setStyleSheet("QPushButton{border-image:url(./pic/close.png)}""QPushButton:hover{border-image:url(./pic/close-hover.png)}")
         self.btnClose.clicked.connect(self.close)
         self.topBarLayout = QHBoxLayout()
         self.topBarLayout.addWidget(self.btnClose, 0, Qt.AlignRight | Qt.AlignTop)
@@ -1592,11 +1641,98 @@ class multiItem(QDialog):
             # print id
             name = currentItem[1]
             btnNames[i] = QPushButton(unicode(name))
-            btnNames[i].setStyleSheet('background-color:white')
+            btnNames[i].setStyleSheet('background-color:white;color:rgb(55, 62, 150)')
             #btnNames[i].setColor(QColor(255, 255, 255))
             btnNames[i].setFont(getfont())
             btnNames[i].clicked.connect(partial(self.showDetail, id))
             self.layout.addWidget(btnNames[i])
+
+
+class ProgressBar(QDialog):
+    def __init__(self):
+        super(ProgressBar, self).__init__()
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setFixedSize(300, 40)
+        self.initLayout()
+        self.background = QPixmap()
+        self.background.load("./pic/updatewindow.png")
+        self.show()
+        self.setModal(True)
+        self.setStyleSheet("QProgressBar:chunk{background-color:rgb(131,189,232);}""QProgressBar{height:10px; text-align:center}")
+        self.onStart()
+    def paintEvent(self, event):
+        p = QPainter(self)
+
+        p.drawPixmap(0, 0, 300, 40, self.background)
+
+
+    def initLayout(self):
+        self.layout = QVBoxLayout(self)
+        '''self.topBarLayout = QHBoxLayout()
+        self.btnClose = QPushButton()
+        self.btnClose.setFixedSize(15, 15)
+
+        self.btnClose.setStyleSheet(
+            "QPushButton{border-image:url(./pic/close.png)}""QPushButton:hover{border-image:url(./pic/close-hover.png)}")
+        self.btnClose.clicked.connect(self.close)'''
+        #self.topBarLayout.addWidget(self.btnClose, 0, Qt.AlignRight | Qt.AlignTop)
+        #self.layout.addLayout(self.topBarLayout)
+        self.a = QProgressBar()
+
+
+        self.layout.addWidget(self.a)
+
+        self.timer = QBasicTimer()
+        self.step = 0
+
+
+    def timerEvent(self, event):
+        if self.step >= 100:
+            self.timer.stop()
+            self.accept()
+            return
+        self.step += 1
+        self.a.setValue(self.step)
+
+    def onStart(self):
+        if self.timer.isActive():
+            self.timer.stop()
+        else:
+            self.timer.start(100, self)
+
+
+class TimeThread(QThread):
+
+    def __init__(self, username, password, email, window):
+        super(TimeThread, self).__init__()
+        #self.working = True
+        #self.num = 0
+        self.username = username
+        self.password = password
+        self.email = email
+        self.window = window
+    '''def start_timer(self):
+        self.num = 0
+        self.start()'''
+
+    def run(self):
+        info, homework = sync.main(self.username, self.password)
+
+        if info == '!!!':
+            self.window.errorflag = 1
+        else:
+            f = open('./data/user.csv', 'w')
+            f.write(self.username + '\t' + self.password + '\t' + self.email)
+            f.close()
+            self.window.info = info
+            self.window.info.extend(homework)
+        '''while self.working:
+            print "Working", self.thread()
+            self.signal_time.emit("Running time:", self.num)  # 发送信号
+            self.num += 1
+            self.sleep(1)'''
+
 
 
 class UpdateWindow(QDialog):
@@ -1608,9 +1744,10 @@ class UpdateWindow(QDialog):
         self.initLayout()
         self.background = QPixmap()
         self.background.load("./pic/updatewindow.png")
-
+        self.errorflag = 0
         # self.setFixedSize(self.width(), self.height())
         self.show()
+
 
         # def DropSha
 
@@ -1686,7 +1823,7 @@ class UpdateWindow(QDialog):
             pass
 
     def Accept(self):
-
+        self.errorflag = 0
         username = unicode(self.editUsername.text())
         password = unicode(self.editPassword.text())
         #print password
@@ -1700,24 +1837,17 @@ class UpdateWindow(QDialog):
                 return
             self.acceptDrops()
         else:
-            info, homework = sync.main(username, password)
-            #print info
-            #print homework
-
-
-            #print len(info)
-            #print len(homework)
-            if info == '!!!':
+            #
+            self.timer = TimeThread(username, password, email, self)
+            self.timer.start()
+            time.sleep(3)
+            if self.errorflag == 1:
                 warn = Warn('用户名或密码错误')
                 if warn.exec_():
                     return
-            else:
-                f = open('./data/user.csv', 'w')
-                f.write(username + '\t' + password + '\t' + email)
-                f.close()
-            #self.info = info
-            info.extend(homework)
-            self.info = info
+            a = ProgressBar()
+            if a.exec_():
+                pass
 
         self.accept()
 
@@ -1741,7 +1871,7 @@ class trayIcon(QSystemTrayIcon):
 
     def initicon(self):         #托盘初始化
         #self.tray = QSystemTrayIcon() #创建系统托盘对象
-        self.icon = QIcon("./pic/logo-square-32.png")
+        self.icon = QIcon("./pic/logo-square-15.png")
         self.show()
 
         self.setIcon(self.icon)  #设置系统托盘图标
@@ -1757,9 +1887,10 @@ class trayIcon(QSystemTrayIcon):
         self.tray_menu.addAction(self.QuitAction)
         #self.tray_menu.addAction(self.showAction1 )
         self.setContextMenu(self.tray_menu) #设置系统托盘菜单
-        self.showMessage(u"测试", u"我是消息")
+        #self.showMessage(u"测试", u"我是消息")
 
     def showM(self):
+        #print 'haha'
         titleList = []
         endDateList = []
         remindTimeList = []
@@ -1768,11 +1899,21 @@ class trayIcon(QSystemTrayIcon):
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
             reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
             checkBoxGroup, sonID, sonIDList, note = item
+            #print reminder
             if reminder == '1':
+                #print 'haha'
                 titleList.append(unicode(title))
                 temp = startTime.split()
                 startTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
-                endDateList.append(startTime)
+                temp = endTime.split()
+                endTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
+
+                #print tags
+                taggroup = tags.split(',')[:-1]
+                if 'DDL' in taggroup:
+                    endDateList.append(endTime)
+                else:
+                    endDateList.append(startTime)
                 if reminderUnit == '0':
                     remindTimeList.append(int(reminderNumber))
                 elif reminderUnit == '1':
@@ -1792,10 +1933,10 @@ class trayIcon(QSystemTrayIcon):
             timeddl = time.strptime(endDateList[i],'%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
             timeLeftStampTemp = timeDDL-self.timeStamp
-
-            if(timeLeftStampTemp==remindTimeList[i]*60):
+            #print timeLeftStampTemp
+            if(timeLeftStampTemp/60==remindTimeList[i]):
                 #print(timeLeftStampTemp)
-                message=u'【 '+titleList[i]+u'】 '+u"距离截止时间还有"+str(remindTimeList[i])+u"分钟！"
+                message=u"距离" + u'【 '+titleList[i]+u'】 ' + u"还有"+str(remindTimeList[i])+u"分钟！"
                 self.showMessage(u"提醒", message)
 
 
@@ -1967,7 +2108,7 @@ class Talendar(QWidget):  # 主界面
 
 
 
-
+            self.refresh()
             return
 
 
@@ -1988,7 +2129,8 @@ class Talendar(QWidget):  # 主界面
 
         upperPage = QPushButton()
         upperPage.setFixedSize(15, 25)
-        upperPage.setStyleSheet("border-image:url(./pic/forward.png)")
+        upperPage.setStyleSheet(
+            "QPushButton{border-image:url(./pic/forward.png)}""QPushButton:hover{border-image:url(./pic/forward-hover.png)}")
         self.topLayout.addWidget(upperPage)
         upperPage.clicked.connect(self.upPage)
         nextPage = QPushButton()
@@ -1997,14 +2139,15 @@ class Talendar(QWidget):  # 主界面
         self.btnClose = QPushButton()
         self.btnClose.setFixedSize(25, 25)
 
-        self.btnClose.setStyleSheet("border-image:url(./pic/close_big.png)")
+        self.btnClose.setStyleSheet("QPushButton{border-image:url(./pic/close_big.png)}""QPushButton:hover{border-image:url(./pic/close-big-hover.png)}")
         self.btnClose.clicked.connect(self.close)
         self.topLayout.addWidget(self.btnClose)
         self.topLayout.setSpacing(15)
         self.topLayout.setContentsMargins(0, 12, 10, 5)
         nextPage.setFixedSize(15, 25)
 
-        nextPage.setStyleSheet("border-image:url(./pic/next.png)")
+        nextPage.setStyleSheet(
+            "QPushButton{border-image:url(./pic/next.png)}""QPushButton:hover{border-image:url(./pic/next-hover.png)}")
         nextPage.clicked.connect(self.nextPage)
 
     def initMainGrid(self):
@@ -2038,7 +2181,7 @@ class Talendar(QWidget):  # 主界面
         self.righttopLayout.addStretch(1)
         self.rightbtnClose = QPushButton()
         self.rightbtnClose.setFixedSize(25, 25)
-        self.rightbtnClose.setStyleSheet("border-image:url(./pic/close_big.png)")
+        self.rightbtnClose.setStyleSheet("QPushButton{border-image:url(./pic/close_big.png)}""QPushButton:hover{border-image:url(./pic/close-big-hover.png)}")
         self.rightbtnClose.clicked.connect(self.close)
         self.righttopLayout.addWidget(self.rightbtnClose)
         self.rightLayout.addLayout(self.righttopLayout)
@@ -2047,8 +2190,8 @@ class Talendar(QWidget):  # 主界面
         self.rightLayout.setContentsMargins(0, 7, 15, 0)
         self.mainLayout.addLayout(self.rightLayout, 0, 2)
         self.mainLayout.setColumnStretch(1, 2)
-        self.initDDL()
-        self.DDL.hide()
+        #self.initDDL()
+        #self.DDL.hide()
         self.rightbtnClose.hide()
 
     def targetCourse(self):
@@ -2060,7 +2203,7 @@ class Talendar(QWidget):  # 主界面
         self.refresh()
 
     def targetConf(self):
-        self.targetTag = '活动/会议'
+        self.targetTag = '活动'
         self.refresh()
 
     def targetOther(self):
@@ -2097,8 +2240,19 @@ class Talendar(QWidget):  # 主界面
         # btnIcon.setStyleSheet("border-image:url(./pic/title.png)")
         # self.leftLayout.addWidget(btnIcon)
 
-        topSpace = QSpacerItem(1, 80)
+        #topSpace = QSpacerItem(1, 80)
+        #elf.leftLayout.addItem(topSpace)
+        topSpace1 = QSpacerItem(1, 40)
+        self.leftLayout.addItem(topSpace1)
+
+        btnLogo = QPushButton()
+        btnLogo.setFixedSize(80, 12)
+        btnLogo.setStyleSheet('border-image:url(./pic/onlylogo.png)')
+        self.leftLayout.addWidget(btnLogo)
+
+        topSpace = QSpacerItem(1, 10)
         self.leftLayout.addItem(topSpace)
+
         btnUpdate = QPushButton()
         btnUpdate.setFixedSize(75, 28)
         #btnUpdate.setStyleSheet("border-image:url(./pic/update.png);")
@@ -2128,10 +2282,10 @@ class Talendar(QWidget):  # 主界面
         change.setFixedSize(75, 28)
         change.setStyleSheet("QPushButton{border-image:url(./pic/screen.png)}""QPushButton:hover{border-image:url(./pic/screen-hover.png)}")
         self.leftLayout.addWidget(change)
-        btnSetting = QPushButton()
-        self.leftLayout.addWidget(btnSetting)
-        btnSetting.setFixedSize(75, 28)
-        btnSetting.setStyleSheet("QPushButton{border-image:url(./pic/settings.png)}""QPushButton:hover{border-image:url(./pic/settings-hover.png)}")
+        #btnSetting = QPushButton()
+        #self.leftLayout.addWidget(btnSetting)
+        #btnSetting.setFixedSize(75, 28)
+        #btnSetting.setStyleSheet("QPushButton{border-image:url(./pic/settings.png)}""QPushButton:hover{border-image:url(./pic/settings-hover.png)}")
 
         btnDDL.clicked.connect(self.showDDL)
 
@@ -2153,10 +2307,10 @@ class Talendar(QWidget):  # 主界面
         self.btnConf.clicked.connect(self.targetConf)
         self.btnOther.clicked.connect(self.targetOther)
         # self.btnOther.clicked(self.targetOther)
-        self.leftLayout.insertWidget(4, self.btnOther)
-        self.leftLayout.insertWidget(4, self.btnConf)
-        self.leftLayout.insertWidget(4, self.btnHomework)
-        self.leftLayout.insertWidget(4, self.btnCourse)
+        self.leftLayout.insertWidget(6, self.btnOther)
+        self.leftLayout.insertWidget(6, self.btnConf)
+        self.leftLayout.insertWidget(6, self.btnHomework)
+        self.leftLayout.insertWidget(6, self.btnCourse)
         self.btnHomework.hide()
         self.btnConf.hide()
         self.btnOther.hide()
@@ -2259,12 +2413,12 @@ class Talendar(QWidget):  # 主界面
         newitem = QTableWidgetItem(LeftTime)
 
         if (timeLeftStampTemp > 7 * 86400):
-            newitem.setBackgroundColor(QColor(0, 255, 0))
+            newitem.setBackgroundColor(QColor(0, 255, 0, 125))
         else:
             if (timeLeftStampTemp > 3 * 86400):
-                newitem.setBackgroundColor(QColor(255, 255, 0))
+                newitem.setBackgroundColor(QColor(255, 255, 0, 125))
             else:
-                newitem.setBackgroundColor(QColor(255, 0, 0))
+                newitem.setBackgroundColor(QColor(255, 0, 0, 125))
 
         self.DDLItem.setItem(2, 0, newitem)
 
@@ -2286,7 +2440,10 @@ class Talendar(QWidget):  # 主界面
 
         else:
             self.resize(920, 620)
-            self.DDL.hide()
+            try:
+                self.DDL.hide()
+            except:
+                pass
             self.rightbtnClose.hide()
             self.btnClose.show()
             self.center()
@@ -2926,7 +3083,7 @@ class Talendar(QWidget):  # 主界面
 
         if len(IDs) > 1:
             IDs = IDs[:-1]
-            multiWindow = multiItem(IDs)
+            multiWindow = multiItem(IDs, self)
             if multiWindow.exec_():
                 self.refresh()
                 return
@@ -2934,16 +3091,20 @@ class Talendar(QWidget):  # 主界面
             IDs = IDs[0]
             showWindow = Show(IDs)
             detail = details(IDs)
-            d_endtime_list = detail[4].split()
+            #d_endtime_list = detail[4].split()
             if showWindow.exec_():
 
                 if showWindow.flag == 1:
-                    # print 'twinkle'
+                    #print 'twinkle'
                     self.twinkle(showWindow.sonIDList[1:])
+                    #self.refresh()
+                    return
                     # self.twinkle(showWindow.sonIDList)
                 if showWindow.deleteflag == 1:
+                    self.refresh()
                     pass
                 else:
+
                     new_list = getinfo(showWindow)
                     new_filename = IDs + '$$' + new_list[5] + '$$' + new_list[6]
                     new_path = 'data/list/' + new_filename
@@ -2956,7 +3117,8 @@ class Talendar(QWidget):  # 主界面
                         temp_list = lists[i].split(' ')
                         if IDs == temp_list[0]:
                             filename_list = temp_list[2].split('-')
-                            old_filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + filename_list[2] + '$$' + filename_list[3]
+                            old_filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + \
+                                           filename_list[2] + '$$' + filename_list[3]
                             new_item = IDs + ' ' + new_list[2] + '-' + new_list[3] + '-' + new_list[4] + ' ' + new_list[
                                 5] + '-' + new_list[6] + '-' + new_list[7] + ' ' + new_list[0]
                             lists[i] = new_item
@@ -2993,7 +3155,26 @@ class Talendar(QWidget):  # 主界面
                     fnote = open(note_path, 'w')
                     fnote.write(new_list[12])
                     fnote.close()
-                self.refresh()
+
+                    #remove(IDs)
+
+                    #save(getinfo(addWindow), last_num, fname_sonIDlist)
+                    update = updateToS()
+                    if update == -1:
+                        warn = Warn('未预留邮箱信息！')
+                        self.refresh()
+                        if warn.exec_():
+                            return
+                    elif update == -2:
+                        warn = Warn('网络异常，无法同步到服务器')
+                        self.refresh()
+                        if warn.exec_():
+                            return
+                    else:
+                        self.refresh()
+                        pass
+
+
                 return
 
     def addNewEvent(self, row, col, ID, title):  # 仅更改显示，数据未存
@@ -3056,7 +3237,8 @@ class Talendar(QWidget):  # 主界面
             newItem = QListWidgetItem(unicode(text))
 
             if self.date.strftime("%Y-%m-%d") == strftime("%Y-%m-%d") and day == int(self.date.strftime("%d")) - 1:
-                newItem.setBackground(QBrush(QColor(Qt.yellow)))
+                newItem.setBackground(QBrush(QColor(255, 217, 42)))
+                #newItem.setBackground(QBrush(QColor(Qt.yellow)))
             newItem.setFlags(Qt.NoItemFlags)
             comBox.addItem(newItem)
             otherschedule = []
