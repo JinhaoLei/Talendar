@@ -11,6 +11,7 @@ from datetime import timedelta
 from calendar import monthrange
 from functools import partial
 import os
+import chardet
 import os.path
 import time
 import re
@@ -1366,7 +1367,8 @@ class Show(Add):
         #startTime.split()[0]
         #self.date = table[dates[-1]] + ' ' + dates[1] + u'月' + ' ' + dates[2] + ' ' + dates[0]
         #self.weekday = int(dates[-1]) - 1
-
+        #date = table[datetime(datetime.now().year, datetime.now().month, datetime.now().day).strftime("%w")] + ' ' + str(datetime.now().month) + u'月' + ' ' + str(datetime.now().day) + ' ' + str(datetime.now().year)
+        #self.truedate = table[datetime(year, month, day).strftime("%w")] + ' ' + str(month) + u'月' + ' ' + str(day) + ' ' + str(year)
         self.editStartDate.setText(date)
         self.editStartHour.setText(startTime.split()[1])
         self.editStartMinute.setText(startTime.split()[2])
@@ -2384,7 +2386,7 @@ class Talendar(QWidget):  # 主界面
 
     def initDDLItem(self, item, deadLine):
         self.DDLItem = QTableWidget(3, 1)
-
+        self.DDLItem.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.DDLItem.setColumnWidth(0, 150)
 
         self.DDLItem.setRowHeight(1, 30)
@@ -2398,6 +2400,7 @@ class Talendar(QWidget):  # 主界面
         timeDDL = int(time.mktime(timeddl))
         timeLeftStampTemp = timeDDL - self.timeStamp
 
+
         timeLeftDay = timeLeftStampTemp / 86400
         timeLeftHour = (timeLeftStampTemp - timeLeftDay * 86400) / 3600
         timeLeftMin = (timeLeftStampTemp - timeLeftDay * 86400 - timeLeftHour * 3600) / 60
@@ -2406,6 +2409,7 @@ class Talendar(QWidget):  # 主界面
         LeftTime = str(timeLeftDay) + u'天' + str(timeLeftHour) + u'小时' + str(timeLeftMin) + u'分钟'
 
         newitem = QTableWidgetItem(item)
+
         # newitem.setBackgroundColor(QColor(100,25,25) )
         self.DDLItem.setItem(0, 0, newitem)
         newitem = QTableWidgetItem(deadLine)
@@ -2724,8 +2728,10 @@ class Talendar(QWidget):  # 主界面
                 otherschedule=[]
                 for i,title in enumerate(scheduletitle):
                     if i<3:
-                        if len(title)>18:
-                            title=title[:18]+u'...'
+                        title = title.decode('utf-8')
+                        if len(title)>6:
+
+                            title=title[:6]+u'...'
                         newItem=QListWidgetItem(unicode(title))
                         newItem.setFont(QFont(FontType,FontSize))
                         newItem.setStatusTip(str(scheduleid[i]))
@@ -3197,8 +3203,10 @@ class Talendar(QWidget):  # 主界面
                 item_C.setStatusTip(str(ID) + '-')
                 comBox.addItem(item_C)
                 return
-        if len(title) > 18:
-            title = title[:18] + u'...'
+        title = title.decode('utf-8')
+        if len(title) > 6:
+
+            title = title[:6] + u'...'
         newItem = QListWidgetItem(unicode(title))
         newItem.setFont(QFont(FontType, FontSize))
         newItem.setStatusTip(str(ID))
@@ -3245,8 +3253,10 @@ class Talendar(QWidget):  # 主界面
 
             for i, title in enumerate(scheduletitle):
                 if i < 3:
-                    if len(title) > 18:
-                        title = title[:18] + '...'
+                    title = title.decode('utf-8')
+                    if len(title) > 6:
+
+                        title = title[:6] + '...'
                     #print title
                     newItem = QListWidgetItem(unicode(title))
                     newItem.setFont(QFont(FontType, FontSize))
