@@ -1384,7 +1384,7 @@ class TrayIcon(QSystemTrayIcon):
 
 
     def iconClied(self, reason):
-        "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"
+        #是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击
         if reason == 2 or reason == 3:
             pw = self.parent()
 
@@ -1392,7 +1392,7 @@ class TrayIcon(QSystemTrayIcon):
 
         if reason ==1 :
             self.tray_menu.show()
-            #self.showMessage(u"测试", u"我是消息")
+            
 
 class Talendar(QWidget):  # 主界面
 
@@ -1767,7 +1767,7 @@ class Talendar(QWidget):  # 主界面
         timeLeftDay = timeLeftStampTemp / 86400
         timeLeftHour = (timeLeftStampTemp - timeLeftDay * 86400) / 3600
         timeLeftMin = (timeLeftStampTemp - timeLeftDay * 86400 - timeLeftHour * 3600) / 60
-        
+
 
         LeftTime = str(timeLeftDay) + u'天' + str(timeLeftHour) + u'小时' + str(timeLeftMin) + u'分钟'
 
