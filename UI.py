@@ -1690,12 +1690,12 @@ class ProgressBar(QDialog):
 
 
     def timerEvent(self, event):
-        if self.step >= 100:
+        if int(self.step) >= 100:
             self.timer.stop()
             self.accept()
             return
         self.step += 1
-        self.a.setValue(self.step)
+        self.a.setValue(int(self.step))
 
     def onStart(self):
         if self.timer.isActive():
@@ -1952,7 +1952,7 @@ class trayIcon(QSystemTrayIcon):
 
         if reason ==1 :
             self.tray_menu.show()
-            self.showMessage(u"测试", u"我是消息")
+            #self.showMessage(u"测试", u"我是消息")
 
 class white(QWidget):
     def __init__(self):
@@ -2072,7 +2072,12 @@ class Talendar(QWidget):  # 主界面
 
         updatewindow = UpdateWindow()
         if updatewindow.exec_():
-            info = updatewindow.info
+            while(1):
+                try:
+                    info = updatewindow.info
+                    break
+                except:
+                    pass
 
             IDList = []
 
@@ -2142,7 +2147,7 @@ class Talendar(QWidget):  # 主界面
         self.btnClose.setFixedSize(25, 25)
 
         self.btnClose.setStyleSheet("QPushButton{border-image:url(./pic/close_big.png)}""QPushButton:hover{border-image:url(./pic/close-big-hover.png)}")
-        self.btnClose.clicked.connect(self.close)
+        self.btnClose.clicked.connect(self.hide)
         self.topLayout.addWidget(self.btnClose)
         self.topLayout.setSpacing(15)
         self.topLayout.setContentsMargins(0, 12, 10, 5)
@@ -2184,7 +2189,8 @@ class Talendar(QWidget):  # 主界面
         self.rightbtnClose = QPushButton()
         self.rightbtnClose.setFixedSize(25, 25)
         self.rightbtnClose.setStyleSheet("QPushButton{border-image:url(./pic/close_big.png)}""QPushButton:hover{border-image:url(./pic/close-big-hover.png)}")
-        self.rightbtnClose.clicked.connect(self.close)
+        self.rightbtnClose.clicked.connect(self.hide)
+
         self.righttopLayout.addWidget(self.rightbtnClose)
         self.rightLayout.addLayout(self.righttopLayout)
 
