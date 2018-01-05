@@ -12,14 +12,12 @@ import sys
 import threading
 reload(sys)
 sys.setdefaultencoding('utf8')
-#设置smtplib所需的参数
-#下面的发件人，收件人是用于邮件传输的。
+
 smtpserver = 'smtp.163.com'
 username = 'Talendar@163.com'
 password='talendar123'
 sender='Talendar@163.com'
-#receiver='XXX@126.com'
-#收件人为多个收件人
+
 def send(info):
     title, loc, reminderNumber, reminderUnit, time, tags, ddlflag, em, note= info
 
@@ -46,25 +44,15 @@ def send(info):
             t += i + '\t'
     time = time.split(' ')[0].split('-')[0] + "年" + time.split(' ')[0].split('-')[1] + "月" + time.split(' ')[0].split('-')[2] + "日 " + time.split(' ')[1]  + "点" +  time.split(' ')[2] + "分"
     text = "事件名称：" + title + "\n" + "地点：" + loc +  "\n" + timesen + time + "\n" + "备注：" + note +  "\n" + "标签：" + t + "\n\n" + "Talendar小组敬上"
-    #print title, loc, note, tags
-    #text = u'事件名称：' + title + "\n" + u'地点：' + loc + + "\n" + u'备注：' + note +  "\n" + u'标签：' + tags
+    
     msg = MIMEText(text,'plain', 'utf-8')  
     msg['Subject'] = subject
     msg['From'] = 'Talendar<Talendar@163.com>'
-    #msg['To'] = 'XXX@126.com'
-    #收件人为多个收件人,通过join将列表转换为以;为间隔的字符串
     msg['To'] = ";".join(receiver) 
-    #msg['Date']='2012-3-16' '''  
-  
 
-
-
-
-    #发送邮件
     smtp = smtplib.SMTP()    
     smtp.connect('smtp.163.com')
-    #我们用set_debuglevel(1)就可以打印出和SMTP服务器交互的所有信息。
-    #smtp.set_debuglevel(1)  
+
     smtp.login(username, password)    
     smtp.sendmail(sender, receiver, msg.as_string())    
     smtp.quit()
@@ -91,7 +79,6 @@ def main():
             ddlFlag = f[i]['ddlFlag']
             note = f[i]['note']
             em = f[i]['email']
-            #print ddlFlag
             if ddlFlag == '1':
                 endTime = endTime
             else:
@@ -107,19 +94,11 @@ def main():
             now = datetime.datetime.now()
             print int((endtime - now).total_seconds())
             if int((endtime - now).total_seconds()) / 60 ==  reminder:
-                #print [title, loc, reminderNumber, reminderUnit, endTime, tags, ddlFlag, em, note]
-                #print 'bingo!'
                 threads = []
                 s = [title, loc, reminderNumber, reminderUnit, endTime, tags, ddlFlag, em, note]
                 t = threading.Thread(target = send,args=(s,))
-                #threads.append(t)
                 t.setDaemon(True)
                 t.start()
                 t.join()
-                #send([title, loc, reminderNumber, reminderUnit, endTime, tags, ddlFlag, em, note])
-                print 'finish'
-                #return
-                #send([title, loc, reminderNumber, reminderUnit, endTime, tags, ddlFlag, em, note])
-        
         time.sleep(60)
 main()

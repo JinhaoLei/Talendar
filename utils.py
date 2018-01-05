@@ -4,10 +4,11 @@ import os
 import os.path
 import re
 import sys
+import client
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-def UpdateToS():
+def updateToS():
 
     try:
         f = open('./data/user.csv')
@@ -34,15 +35,12 @@ def UpdateToS():
             #print infoList
     if len(infoList) > 1:
         try:
-            tx.main(infoList)
+            client.main(infoList)
         except:
-            #print 'wrong'
             return -2
     else:
         pass
     return 0
-
-
 
 def transDate(date):
     [year, month, day] = date.split('-')
@@ -221,7 +219,7 @@ def remove(ID):
     # del lists[k]
     return
 
-def getinfo(addWindow):
+def getInfo(addWindow):
     name = addWindow.editTitle.text()
     location = addWindow.editLoc.text()
     startDate = addWindow.editStartDate.text()
@@ -370,12 +368,9 @@ def filter(s):
     if re.match(r"(\d{4}-\d{1,2}-\d{1,2})", s):
         return s
     date = s.split()
-    #print date
     month = date[-3].replace('月', '')
     weekdays = {'周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7}
     weekday = weekdays[date[0]]
     date = date[-1] + '-' + month + '-' + date[-2]
-    #date_weekday = date + '-' + str(weekday)
-    # print date
-    # print date_weekday
+
     return date
