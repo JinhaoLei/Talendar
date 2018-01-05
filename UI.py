@@ -405,110 +405,7 @@ class Add(QDialog):  # 新建事项窗口
         addWindow.buttonSon.setEnabled(False)
         addWindow.buttonSon.hide()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
-            fname_sonIDlist = "data/list/sonIDlist"
-            f_sonIDlist = open(fname_sonIDlist, 'r')
-            lines = f_sonIDlist.readlines()
-            first_line = lines[0]
-            last_line = lines[-1]
-            list1 = first_line.split(' ')
-            list3 = last_line.split(',')
-            num_son = int(list1[0])
-            parents_number = int(list3[0])
-            if num_son == 0:
-                sonNum = parents_number + 1
-            else:
-                elder = int(list3[-2])
-                sonNum = elder + 1
-            f_sonIDlist.close()
-            f_sonIDlist = open(fname_sonIDlist, 'w')
-            f_sonIDlist.write(str(num_son + 1) + '\n')
-            f_sonIDlist.write(str(parents_number) + ',')
-            for i in range(parents_number + 1, sonNum + 1):
-                f_sonIDlist.write(str(i) + ',')
-            f_sonIDlist.close()
-            name = addWindow.editTitle.text()
-            if name == '': name = 'None'
-            location = addWindow.editLoc.text()
-            if location == '': location = 'None'
-            startDate = addWindow.editStartDate.text()
-            if startDate == '':
-                startDate = '1000-1-1'
-            else:
-                startDate = filter(str(startDate))
-            startHour = addWindow.editStartHour.text()
-            if startHour == '': startHour = '25'
-            startMinute = addWindow.editStartMinute.text()
-            if startMinute == '': startMinute = '61'
-            endDate = addWindow.editEndDate.text()
-            if endDate == '':
-                endDate = '1000-1-1'
-            else:
-                endDate = filter(str(endDate))
-            endHour = addWindow.editEndHour.text()
-            if endHour == '': endHour = '25'
-            endMinute = addWindow.editEndMinute.text()
-            if endMinute == '': endMinute = '61'
-            note = addWindow.editNote.toPlainText()
-            if note == '': note = 'None'
-            reminder = addWindow.comboReminder.currentIndex()
-            reminderUnit = addWindow.comboReminderUnit.currentIndex()
-            reminderNumber = addWindow.editReminderTime.text()
-            if reminderNumber == '': reminderNumber = '-1'
-            tags = [unicode(addWindow.tagGroup[i].text()) for i in range(5)]
-            f_tags = open(r"data/root/tags", 'r')
-            tags_list = f_tags.readlines()
-            f_tags.close()
-            f_tags = open(r"data/root/tags", 'w')
-            f_tags.writelines(tags_list)
-            filename = str(sonNum) + '$$' + str(endDate) + '$$' + str(endHour)
-            flag = False
-            for i in range(5):
-                if tags[i] != '':
-                    for j in range(tags_list.__len__()):
-                        if tags[i] == tags_list[j].replace('\n', ''):
-                            flag = True
-                    if not flag:
-                        f_tags.write(str(tags[i]) + '\n')
-                    tag_filename = 'data/root/' + tags[i]
-                    f_special_tags = open(tag_filename.decode('utf-8'), 'a')
-                    f_special_tags.write(str(sonNum) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                                         + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-                    f_special_tags.close()
-            f_tags.close()
-            repeatInfo = addWindow.repeatParameters
-            path = 'data/list/' + filename
-            note_path = 'data/note/' + str(sonNum)
-            f_notefile = open(note_path, 'w')
-            f_notefile.write(note)
-            f_notefile.close()
-            f = open(path, 'w')
-            f.write(str(sonNum) + '\n')
-            f.write(name + '\n')
-            f.write(location + '\n')
-            f.write(startDate + ' ' + startHour + ' ' + startMinute + '\n')
-            f.write(endDate + ' ' + endHour + ' ' + endMinute + '\n')
-            f.write(str(reminder) + '\n')
-            f.write(str(reminderUnit) + '\n')
-            f.write(reminderNumber + '\n')
-            for i in range(5):
-                f.write(str(tags[i]) + ',')
-            f.write('\n')
-            if repeatInfo == []:
-                f.write('-1' + '\n')
-                f.write('-1' + '\n')
-                f.write('[False, False, False]' + '\n')
-                f.write('-1' + '\n')
-                f.write('1000-1-1' + '\n')
-                f.write('[False, False, False, False, False, False, False]' + '\n')
-            else:
-                for i in range(6):
-                    f.write(str(repeatInfo[i]) + '\n')
-            f.write(str(0) + '\n' + str(parents_number) + ',')
-            f_time_routine = open(r"data/root/0_time_routine_ls", 'a')
-            f_time_routine.write(str(sonNum) + ' ' + startDate + '-' + startHour + '-' + startMinute + ' '
-                                 + endDate + '-' + endHour + '-' + endMinute + ' ' + name + '\n')
-            # print name, location, startDate, startHour, startMinute, endDate, endHour, endMinute, note, reminder, reminderUnit, reminderNumber, tags, repeatInfo
-            # print repeatInfo
+            saveSon(addWindow)
             return
 
     def deleteTag(self):
@@ -1098,7 +995,7 @@ class MultiItem(QDialog):
                 fnote.write(new_list[12])
                 fnote.close()
 
-                update = updateToS()
+                update = UpdateToS()
                 if update == -1:
                     warn = Warn('未预留邮箱信息！')
                     self.mainwindow.refresh()
@@ -1339,7 +1236,7 @@ class TrayIcon(QSystemTrayIcon):
         titleList = []
         endDateList = []
         remindTimeList = []
-        info = getcompletelist()
+        info = getCompletelist()
         for item in info:
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
             reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
@@ -1398,7 +1295,7 @@ class Talendar(QWidget):  # 主界面
 
     def __init__(self):
         super(Talendar, self).__init__()
-        self.initFolder()
+        initFolder()
         self.ddlFlag = False
         self.targetTag = None
         self.headerlabels = [u'星期一', u'星期二', u'星期三', u'星期四', u'星期五', u'星期六', u'星期日']
@@ -1439,38 +1336,6 @@ class Talendar(QWidget):  # 主界面
     def startCount(self):
         self.timer.start(60000)
 
-    def initFolder(self):
-        root_directory = ''
-        folder_data = 'data'
-        folder_root = 'root'
-        folder_note = 'note'
-        folder_list = 'list'
-        try:
-            os.mkdir(root_directory + folder_data)
-        except OSError:
-            pass
-        try:
-            os.mkdir(root_directory + folder_data + '/' + folder_root)
-        except OSError:
-            pass
-        try:
-            os.mkdir(root_directory + folder_data + '/' + folder_list)
-        except OSError:
-            pass
-        try:
-            os.mkdir(root_directory + folder_data + '/' + folder_note)
-        except OSError:
-            pass
-        if not os.path.isfile(r"data/root/0_time_routine_ls"):
-            f = open(r"data/root/0_time_routine_ls", 'a')
-            f.write('0 data/root/0_time_routine_ls' + '\n')
-            f.write('0 data/root/0_time_routine_ls' + '\n')
-            f.close()
-        if not os.path.isfile(r"data/root/tags"):
-            f = open(r"data/root/tags", 'a')
-            f.write('0 data/root/tags' + '\n')
-            f.close()
-
     def update(self):
 
         updateWindow = UpdateWindow()
@@ -1484,7 +1349,7 @@ class Talendar(QWidget):  # 主界面
 
             IDList = []
 
-            oldInfo = getcompletelist()
+            oldInfo = getCompletelist()
             for item in oldInfo:
                 id, title, loc, startTime, endTime, reminder, reminderUnit, \
                 reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
@@ -1693,7 +1558,7 @@ class Talendar(QWidget):  # 主界面
 
         titleList = []
         endDateList = []
-        info = getcompletelist()
+        info = getCompletelist()
         for item in info:
             id, title, loc, startTime, endTime, reminder, reminderUnit, \
             reminderNumber, tags, comboUnit, frequency, radioSelected, endTimes, endDate, \
@@ -1836,26 +1701,11 @@ class Talendar(QWidget):  # 主界面
         self.show()
 
     def newWindow(self):  # 新建事项窗口的接口
-        fname = "data/root/0_time_routine_ls"
-        fname_sonIDlist = "data/list/sonIDlist"
-        f_sonIDlist = open(fname_sonIDlist, 'w')
-        with open(fname, 'r') as f:
-            lines = f.readlines()
-            last_line = lines[-1]
-            penult_line = lines[-2]
-        list1 = last_line.split(' ')
-        list2 = penult_line.split(' ')
-        last_num = int(list1[0])
-        if int(list2[0]) > int(list1[0]): last_num = int(list2[0])
-        f.close()
-        f_sonIDlist.write('0' + '\n')
-        f_sonIDlist.write(str(last_num + 1) + ',')
-        f_sonIDlist.close()
-
+        last_num, fname_sonIDlist = getLastNum()
         addWindow = Add()
         if addWindow.exec_():  # 用户点击OK后，会获得所有设置的参数，包括在重复窗口里面获得的参数
             save(getInfo(addWindow), last_num, fname_sonIDlist)
-            update = updateToS()
+            update = UpdateToS()
             if update == -1:
                 warn = Warn('未预留邮箱信息！')
                 self.refresh()
@@ -2100,325 +1950,11 @@ class Talendar(QWidget):  # 主界面
         return grid
 
     def getDayScheduleTitle(self, endDate, targetTag=None):
-        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
-        endDate_list = endDate.split('-')
-        IDlist = []
-        Namelist = []
-        _list = []
-        lists = getlist()
-        for i in range(len(lists)):
-            temp = lists[i].split(' ')
-            temp_list = temp[2].split('-')
-
-            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
-            temp_endDate2 = temp_list[0] + '-' + str(int(temp_list[1])) + '-' + str(int(temp_list[2]))
-
-            # print temp_endDate, endDate
-            temp_ID = temp[0]
-            # get_tag_list(targetTag)
-            # print a
-            if targetTag != None:
-                inThisTag = get_tag_list(targetTag)
-                idlist = []
-                for item in inThisTag:
-                    idlist.append(item.split()[0])
-                if temp_ID not in idlist:
-                    continue
-
-            if temp_endDate2 == endDate:
-                IDlist.append(temp[0])
-                Namelist.append(temp[3])
-            else:
-                filename = temp_ID + '$$' + temp_endDate + '$$' + temp_list[3]
-                path = 'data/list/' + filename
-                f = open(path, 'r')
-                detail = f.readlines()
-                __list = detail[3].split(' ')  #####
-                startlist = __list[0].split('-')
-                startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
-                TstartDate = datetime.strptime(startDate, '%Y-%m-%d')
-                repeattype = detail[9].replace('\n', '')
-                # 0:天 1:周 2:月 3:年
-                repeatfren = int(detail[10].replace('\n', ''))
-                endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(',')
-                endtype = -1  #######
-                for j in range(len(endtypelist)):
-                    if endtypelist[j] == 'True':
-                        endtype = j
-                        # 0:永不 1;重复次数 2：结束日期
-                repeattimes = int(detail[12].replace('\n', ''))
-                #print detail[13].replace('\n', '')
-                enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
-                repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
-                if TendDate >= TstartDate:
-                    if repeattype == '0':
-                        if endtype == 0:  # 按日重复，永不停止
-                            delta = TendDate - TstartDate
-                            if delta.days % repeatfren == 0:
-                                IDlist.append(temp[0])
-                                Namelist.append(temp[3])
-                        elif endtype == 1:  # 按照日重复，间隔一定的天数
-                            due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
-                            delta = TendDate - TstartDate
-                            if due_date > TendDate:
-                                if delta.days % repeatfren == 0:
-                                    IDlist.append(temp[0])
-                                    Namelist.append(temp[3])
-                        elif endtype == 2:  # 按天重复到某个日期
-                            delta = TendDate - TstartDate
-                            if enddate >= TendDate:
-                                if delta.days % repeatfren == 0:
-                                    IDlist.append(temp[0])
-                                    Namelist.append(temp[3])
-                    elif repeattype == '1':
-                        if endtype == 0:  # 按周重复，永不停止
-                            weekday = TendDate.weekday()
-                            if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                delta = TendDate - TstartDate
-                                if delta.days % (7 * repeatfren) < 7:
-                                    IDlist.append(temp[0])
-                                    Namelist.append(temp[3])
-                        elif endtype == 1:  # 按照周重复一定的次数
-                            due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
-                            if due_date > TendDate:
-                                weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                    delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) < 7:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                        elif endtype == 2:  # 按周重复到某个日期
-                            if enddate >= TendDate:
-                                weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                    delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) < 7:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                    elif repeattype == '2':
-                        if endtype == 0:  # 按月重复，永不停止
-                            delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
-                                startlist[1])
-                            if delta % repeatfren == 0:
-                                if endDate_list[2] == startlist[2]:
-                                    IDlist.append(temp[0])
-                                    Namelist.append(temp[3])
-                        elif endtype == 1:  # 按照月重复一定的次数
-                            if endDate_list[2] == startlist[2]:
-                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
-                                    startlist[1])
-                                if delta % repeatfren == 0:
-                                    if delta / repeatfren < repeattimes:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                        elif endtype == 2:  # 按月重复到某个日期
-                            if enddate >= TendDate:
-                                if endDate_list[2] == startlist[2]:
-                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
-                                        endDate_list[1]) - int(
-                                        startlist[1])
-                                    if delta % repeatfren == 0:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                    elif repeattype == '3':
-                        if endtype == 0:  # 按年重复，永不停止
-                            delta = (int(endDate_list[0]) - int(startlist[0]))
-                            if delta % repeatfren:
-                                if endDate_list[2] == startlist[2]:
-                                    if endDate_list[1] == startlist[1]:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                        elif endtype == 1:  # 按照年重复一定的次数
-                            if endDate_list[2] == startlist[2]:
-                                if endDate_list[1] == startlist[1]:
-                                    delta = (int(endDate_list[0]) - int(startlist[0]))
-                                    if delta % repeatfren == 0:
-                                        if delta / repeatfren < repeattimes:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                        elif endtype == 2:  # 按月重复到某个日期
-                            if enddate >= TendDate:
-                                delta = (int(endDate_list[0]) - int(startlist[0]))
-                                if delta % repeatfren:
-                                    if endDate_list[2] == startlist[2]:
-                                        if endDate_list[1] == startlist[1]:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-        _list.append(IDlist)
-        _list.append(Namelist)
-        # print _list
+        _list = getDayTitle(endDate)
         return _list
 
     def getHourScheduleTitle(self, startDate, targetTag=None):
-        #print startDate
-        endDate_list = startDate.split('-')
-        endDate = endDate_list[0] + '-' + endDate_list[1] + '-' + endDate_list[2]
-        TendDate = datetime.strptime(endDate, '%Y-%m-%d')
-        IDlist = []
-        Namelist = []
-        _list = []
-        lists = getlist()
-        # print endDate
-        for i in range(len(lists)):
-            temp = lists[i].split(' ')
-            # print temp
-            temp_list = temp[1].split('-')  # 开始时间
-            temp_list1 = temp[2].split('-')  # 结束时间
-            temp_endDate1 = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
-            if len(temp_list[2]) == 1:  # 如果只有一个字符加0
-                temp_list[2] = '0' + temp_list[2]
-            if len(temp_list1[2]) == 1:
-                temp_list1[2] = '0' + temp_list1[2]
-            temp_endDate = temp_list[0] + '-' + temp_list[1] + '-' + temp_list[2]
-            endhour = int(temp_list[3])
-            # temp_beginDate = temp_list1[0] + '-' + temp_list1[1] + '-' + temp_list1[2]
-            beginhour = int(temp_list1[3])
-            # print temp_endDate
-            # print endDate
-            # <<<<<<< HEAD
-            # print endhour, beginhour
-            # =======
-            # print endhour,beginhour
-            temp_ID = temp[0]
-
-            # get_tag_list(targetTag)
-            # print a
-
-            if targetTag != None:
-                inThisTag = get_tag_list(targetTag)
-                idlist = []
-                for item in inThisTag:
-                    idlist.append(item.split()[0])
-                if temp_ID not in idlist:
-                    continue
-
-            # >>>>>>> ee7dd62a3e4e07044937d59e1ac273ea592c74fe
-            #print endDate_list[-1]
-            if endhour <= int(endDate_list[-1]) and beginhour >= int(endDate_list[-1]):
-
-                if temp_endDate == endDate:
-                    IDlist.append(temp[0])
-                    Namelist.append(temp[3])
-                else:
-                    filename = temp_ID + '$$' + temp_endDate1 + '$$' + temp_list1[3]
-                    path = 'data/list/' + filename
-                    f = open(path, 'r')
-                    detail = f.readlines()
-                    startlist = detail[3].split('-')
-                    __list = detail[3].split(' ')  #####
-                    startlist = __list[0].split('-')
-                    _startDate = startlist[0] + '-' + startlist[1] + '-' + startlist[2]
-                    TstartDate = datetime.strptime(_startDate, '%Y-%m-%d')
-                    repeattype = detail[9].replace('\n', '')
-                    # 0:天 1:周 2:月 3:年
-                    repeatfren = int(detail[10].replace('\n', ''))
-                    endtypelist = detail[11].replace('\n', '').replace(' ', '').replace('[', '').replace(']', '').split(
-                        ',')
-                    endtype = -1
-                    for j in range(len(endtypelist)):
-                        if endtypelist[j] == 'True':
-                            endtype = j
-                            # 0:永不 1;重复次数 2：结束日期
-                    repeattimes = int(detail[12].replace('\n', ''))
-                    enddate = datetime.strptime(detail[13].replace('\n', ''), '%Y-%m-%d')
-                    repeatweekdays = detail[14].replace('\n', '').replace('[', '').replace(']', '').split(',')
-                    if TendDate >= TstartDate:
-                        if repeattype == '0':
-                            if endtype == 0:  # 按日重复，永不停止
-                                delta = TendDate - TstartDate
-                                if delta.days % repeatfren == 0:
-                                    IDlist.append(temp[0])
-                                    Namelist.append(temp[3])
-                            elif endtype == 1:  # 按照日重复，间隔一定的天数
-                                due_date = TstartDate + timedelta(days=(repeattimes * repeatfren))
-                                delta = TendDate - TstartDate
-                                if due_date > TendDate:
-                                    if delta.days % repeatfren == 0:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                            elif endtype == 2:  # 按天重复到某个日期
-                                delta = TendDate - TstartDate
-                                if enddate >= TendDate:
-                                    if delta.days % repeatfren == 0:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                        elif repeattype == '1':
-                            if endtype == 0:  # 按周重复，永不停止
-                                weekday = TendDate.weekday()
-                                if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                    delta = TendDate - TstartDate
-                                    if delta.days % (7 * repeatfren) < 7:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                            elif endtype == 1:  # 按照周重复一定的次数
-                                due_date = TstartDate + timedelta(days=(repeattimes * (7 * repeatfren)))
-                                if due_date > TendDate:
-                                    weekday = TendDate.weekday()
-                                    if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                        delta = TendDate - TstartDate
-                                        if delta.days % (7 * repeatfren) < 7:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                            elif endtype == 2:  # 按周重复到某个日期
-                                if enddate >= TendDate:
-                                    weekday = TendDate.weekday()
-                                    if repeatweekdays[(weekday + 1) % 7 - 1] == ' True':
-                                        delta = TendDate - TstartDate
-                                        if delta.days % (7 * repeatfren) < 7:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                        elif repeattype == '2':
-                            if endtype == 0:  # 按月重复，永不停止
-                                delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(endDate_list[1]) - int(
-                                    startlist[1])
-                                if delta % repeatfren == 0:
-                                    if endDate_list[2] == startlist[2]:
-                                        IDlist.append(temp[0])
-                                        Namelist.append(temp[3])
-                            elif endtype == 1:  # 按照月重复一定的次数
-                                if endDate_list[2] == startlist[2]:
-                                    delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
-                                        endDate_list[1]) - int(
-                                        startlist[1])
-                                    if delta % repeatfren == 0:
-                                        if delta / repeatfren < repeattimes:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                            elif endtype == 2:  # 按月重复到某个日期
-                                if enddate >= TendDate:
-                                    if endDate_list[2] == startlist[2]:
-                                        delta = (int(endDate_list[0]) - int(startlist[0])) * 12 + int(
-                                            endDate_list[1]) - int(
-                                            startlist[1])
-                                        if delta % repeatfren == 0:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                        elif repeattype == '3':
-                            if endtype == 0:  # 按年重复，永不停止
-                                delta = (int(endDate_list[0]) - int(startlist[0]))
-                                if delta % repeatfren:
-                                    if endDate_list[2] == startlist[2]:
-                                        if endDate_list[1] == startlist[1]:
-                                            IDlist.append(temp[0])
-                                            Namelist.append(temp[3])
-                            elif endtype == 1:  # 按照年重复一定的次数
-                                if endDate_list[2] == startlist[2]:
-                                    if endDate_list[1] == startlist[1]:
-                                        delta = (int(endDate_list[0]) - int(startlist[0]))
-                                        if delta % repeatfren == 0:
-                                            if delta / repeatfren < repeattimes:
-                                                IDlist.append(temp[0])
-                                                Namelist.append(temp[3])
-                            elif endtype == 2:  # 按月重复到某个日期
-                                if enddate >= TendDate:
-                                    delta = (int(endDate_list[0]) - int(startlist[0]))
-                                    if delta % repeatfren:
-                                        if endDate_list[2] == startlist[2]:
-                                            if endDate_list[1] == startlist[1]:
-                                                IDlist.append(temp[0])
-                                                Namelist.append(temp[3])
-        _list.append(IDlist)
-        _list.append(Namelist)
+        _list = getHourTitle(startDate)
         return _list
 
     def mouseDoubleClicked(self, eve):
@@ -2439,75 +1975,17 @@ class Talendar(QWidget):  # 主界面
             IDs = IDs[0]
             showWindow = Show(IDs)
             detail = details(IDs)
-            #d_endtime_list = detail[4].split()
             if showWindow.exec_():
-
                 if showWindow.flag == 1:
-                    #print 'twinkle'
                     self.twinkle(showWindow.sonIDList[1:])
-                    #self.refresh()
                     return
-                    # self.twinkle(showWindow.sonIDList)
                 if showWindow.deleteFlag == 1:
                     self.refresh()
                     pass
                 else:
-
                     new_list = getInfo(showWindow)
-                    new_filename = IDs + '$$' + new_list[5] + '$$' + new_list[6]
-                    new_path = 'data/list/' + new_filename
-                    f = open(r"data/root/0_time_routine_ls", 'r')
-                    lists = f.readlines()
-                    f.close()
-                    f = open(r"data/root/0_time_routine_ls", 'w')
-                    for i in range(len(lists)):
-                        lists[i] = lists[i].replace('\n', '')
-                        temp_list = lists[i].split(' ')
-                        if IDs == temp_list[0]:
-                            filename_list = temp_list[2].split('-')
-                            old_filename = temp_list[0] + '$$' + filename_list[0] + '-' + filename_list[1] + '-' + \
-                                           filename_list[2] + '$$' + filename_list[3]
-                            new_item = IDs + ' ' + new_list[2] + '-' + new_list[3] + '-' + new_list[4] + ' ' + new_list[
-                                5] + '-' + new_list[6] + '-' + new_list[7] + ' ' + new_list[0]
-                            lists[i] = new_item
-                        f.write(lists[i] + '\n')
-                    f.close()
-                    old_path = 'data/list/' + old_filename
-                    os.remove(old_path)
-                    fnew = open(new_path, 'w')
-                    fnew.write(str(IDs) + '\n')
-                    fnew.write(new_list[0] + '\n')
-                    fnew.write(new_list[1] + '\n')
-                    fnew.write(new_list[2] + ' ' + new_list[3] + ' ' + new_list[4] + '\n')
-                    fnew.write(new_list[5] + ' ' + new_list[6] + ' ' + new_list[7] + '\n')
-                    fnew.write(str(new_list[8]) + '\n')
-                    fnew.write(str(new_list[9]) + '\n')
-                    fnew.write(new_list[10] + '\n')
-                    for i in range(5):
-                        fnew.write(str(new_list[11][i]) + ',')
-                    fnew.write('\n')
-                    if new_list[13] == []:
-                        fnew.write(detail[9] + '\n')
-                        fnew.write(detail[10] + '\n')
-                        fnew.write(detail[11] + '\n')
-                        fnew.write(detail[12] + '\n')
-                        fnew.write(detail[13] + '\n')
-                        fnew.write(detail[14] + '\n')
-                    else:
-                        for i in range(6):
-                            fnew.write(str(new_list[13][i]) + '\n')
-                    fnew.write(detail[15] + '\n')
-                    fnew.write(detail[16] + '\n')
-                    fnew.close()
-                    note_path = 'data/note/' + IDs
-                    fnote = open(note_path, 'w')
-                    fnote.write(new_list[12])
-                    fnote.close()
-
-                    #remove(IDs)
-
-                    #save(getinfo(addWindow), last_num, fname_sonIDlist)
-                    update = updateToS()
+                    saveModify(IDs, new_list)
+                    update = UpdateToS()
                     if update == -1:
                         warn = Warn('未预留邮箱信息！')
                         self.refresh()
@@ -2522,8 +2000,6 @@ class Talendar(QWidget):  # 主界面
                         print 'show'
                         self.refresh()
                         pass
-
-
                 return
 
     def addNewEvent(self, row, col, ID, title):  # 仅更改显示，数据未存
