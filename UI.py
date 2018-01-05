@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import sync
+#import sync
 import client
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -1306,15 +1306,13 @@ class UpdateWindow(QDialog):
                 pass
         self.accept()
 
-class trayIcon(QSystemTrayIcon):
+class TrayIcon(QSystemTrayIcon):
     def __init__(self,parent=None):
-        super(trayIcon, self).__init__(parent)
-        self.initicon()
+        super(TrayIcon, self).__init__(parent)
+        self.initIcon()
         self.timer = QTimer(self)
-        #self.count = 0
         self.startCount()
-
-        self.timer.timeout.connect(self.showM)
+        self.timer.timeout.connect(self.showMessage)
 
 
 
@@ -1323,28 +1321,21 @@ class trayIcon(QSystemTrayIcon):
 
 
 
-    def initicon(self):         #托盘初始化
-        #self.tray = QSystemTrayIcon() #创建系统托盘对象
+    def initIcon(self):         #托盘初始化
         self.icon = QIcon("./pic/logo-square-15.png")
         self.show()
-
         self.setIcon(self.icon)  #设置系统托盘图标
-
-
         self.activated.connect(self.iconClied) #设置托盘点击事件处理函数
         self.tray_menu = QMenu(QApplication.desktop()) #创建菜单
         pw = self.parent()
-        self.RestoreAction = QAction(u'还原 ', self, triggered= pw.show) #添加一级菜单动作选项(还原主窗口)
-        self.QuitAction = QAction(u'退出 ', self, triggered=qApp.quit) #添加一级菜单动作选项(退出程序)
-        #self.showAction1 = QAction(u"显示消息1", self, triggered=self.showM)
-        self.tray_menu.addAction(self.RestoreAction) #为菜单添加动作
-        self.tray_menu.addAction(self.QuitAction)
-        #self.tray_menu.addAction(self.showAction1 )
+        self.restoreAction = QAction(u'还原 ', self, triggered= pw.show) #添加一级菜单动作选项(还原主窗口)
+        self.quitAction = QAction(u'退出 ', self, triggered=qApp.quit) #添加一级菜单动作选项(退出程序)
+        self.tray_menu.addAction(self.restoreAction) #为菜单添加动作
+        self.tray_menu.addAction(self.quitAction)
         self.setContextMenu(self.tray_menu) #设置系统托盘菜单
-        #self.showMessage(u"测试", u"我是消息")
 
-    def showM(self):
-        #print 'haha'
+    def showMessage(self):
+
         titleList = []
         endDateList = []
         remindTimeList = []
@@ -1355,14 +1346,13 @@ class trayIcon(QSystemTrayIcon):
             checkBoxGroup, sonID, sonIDList, note = item
             #print reminder
             if reminder == '1':
-                #print 'haha'
                 titleList.append(unicode(title))
                 temp = startTime.split()
                 startTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
                 temp = endTime.split()
                 endTime = temp[0] + ' ' + temp[1] + ':' + temp[2]
 
-                #print tags
+
                 taggroup = tags.split(',')[:-1]
                 if 'DDL' in taggroup:
                     endDateList.append(endTime)
@@ -1375,10 +1365,10 @@ class trayIcon(QSystemTrayIcon):
                 elif reminderUnit == '2':
                     remindTimeList.append(int(reminderNumber) * 1440)
 
-        #print titleList, endDateList, remindTimeList
-        self.timenow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
 
-        self.timeArray = time.strptime(self.timenow,'%Y-%m-%d %H:%M')
+        self.timeNow = time.strftime('%Y-%m-%d %H:%M',time.localtime())
+
+        self.timeArray = time.strptime(self.timeNow,'%Y-%m-%d %H:%M')
         self.timeStamp = int(time.mktime(self.timeArray))
 
         for i in range(len(titleList)):
@@ -1387,9 +1377,7 @@ class trayIcon(QSystemTrayIcon):
             timeddl = time.strptime(endDateList[i],'%Y-%m-%d %H:%M')
             timeDDL = int(time.mktime(timeddl))
             timeLeftStampTemp = timeDDL-self.timeStamp
-            #print timeLeftStampTemp
             if(timeLeftStampTemp/60==remindTimeList[i]):
-                #print(timeLeftStampTemp)
                 message=u"距离" + u'【 '+titleList[i]+u'】 ' + u"还有"+str(remindTimeList[i])+u"分钟！"
                 self.showMessage(u"提醒", message)
 
@@ -1421,8 +1409,8 @@ class Talendar(QWidget):  # 主界面
         self.rowNum = 24
         self.starttime=1
         self.filterFlag = 0
-        self.ti = trayIcon(self)
-        self.ti.show()
+        self.trayIcon = TrayIcon(self)
+        self.trayIcon.show()
         self.resize(920, 620)
         self.center()
         # self.tableDict={u'一':0,u'二':1,u'三':2,u'四':3,u'五':4,u'六':5,u'日':6}
@@ -1779,13 +1767,12 @@ class Talendar(QWidget):  # 主界面
         timeLeftDay = timeLeftStampTemp / 86400
         timeLeftHour = (timeLeftStampTemp - timeLeftDay * 86400) / 3600
         timeLeftMin = (timeLeftStampTemp - timeLeftDay * 86400 - timeLeftHour * 3600) / 60
-        # timeLeftSec =timeLeftStampTemp-timeLeftDay*86400 -timeLeftHour *3600-timeLeftMin *60
+        
 
         LeftTime = str(timeLeftDay) + u'天' + str(timeLeftHour) + u'小时' + str(timeLeftMin) + u'分钟'
 
         newitem = QTableWidgetItem(item)
 
-        # newitem.setBackgroundColor(QColor(100,25,25) )
         self.DDLItem.setItem(0, 0, newitem)
         newitem = QTableWidgetItem(deadLine)
         self.DDLItem.setItem(1, 0, newitem)
